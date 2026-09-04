@@ -12,11 +12,11 @@ The Week 1 operational endpoint is intentionally unversioned because it reports 
 {
   "status": "ok",
   "service": "portfolio-dss-api",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
 ```
 
-This is the only implemented Week 1 endpoint. The versioned financial endpoints below remain the planned contracts for subsequent roadmap weeks.
+The versioned universe, asset, and valuation endpoints described below are implemented in Week 2.
 
 ## Principles
 
@@ -29,15 +29,45 @@ This is the only implemented Week 1 endpoint. The versioned financial endpoints 
 
 ### `GET /api/v1/universes/sp500`
 
-Returns current supported assets and universe metadata.
+Returns current supported assets, the separate SPY benchmark metadata, the constituent snapshot
+date, source provenance, and the current-membership assumption.
 
 ### `GET /api/v1/assets/{ticker}`
 
-Returns asset metadata needed by the UI.
+Returns normalized metadata for a current constituent. Tickers are case-insensitive at this
+boundary. A ticker outside the current universe returns `ASSET_NOT_FOUND` with status 404.
+
+## Portfolio valuation
+
+### `POST /api/v1/portfolios/valuation`
+
+```json
+{
+  "positions": [
+    {"ticker": "AAPL", "quantity": "10"},
+    {"ticker": "MSFT", "quantity": "4.5"}
+  ],
+  "as_of": "2026-09-04"
+}
+```
+
+`as_of` is optional. When omitted, the service uses the latest adjusted close belonging to a
+completed US market session. Weekend and holiday requests resolve to the latest common close on or
+before the requested date. Decimal quantities may be numbers or strings; response monetary values
+are lossless decimal strings.
+
+The response contains:
+
+- requested and actual valuation dates;
+- total USD market value;
+- normalized position quantities, prices, values, and weights;
+- universe and price-source provenance, including stale-fallback status;
+- a deterministic snapshot hash;
+- calculation and current-universe assumptions.
 
 ## Portfolio analysis
 
-### `POST /api/v1/portfolios/analyze`
+### `POST /api/v1/portfolios/analyze` (planned for Week 3)
 
 Input concept:
 

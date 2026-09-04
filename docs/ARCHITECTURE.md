@@ -101,7 +101,9 @@ class MarketUniverseProvider(Protocol):
 
 Initial adapter: S&P 500 constituent provider.
 
-Week 1 defines only the provider port and stable identifiers. The live constituent adapter is a Week 2 deliverable. `sp500` is the universe ID and `SPY` is separate benchmark metadata, labelled as an ETF total-return proxy.
+Week 1 defined the provider port and stable identifiers; Week 2 supplies the live constituent
+adapter. `sp500` is the universe ID and `SPY` is separate benchmark metadata, labelled as an ETF
+total-return proxy.
 
 ### MarketDataProvider
 
@@ -112,11 +114,18 @@ class MarketDataProvider(Protocol):
         asset_ids: Sequence[str],
         start: date,
         end: date,
-        frequency: str,
-    ) -> PriceFrame: ...
+        frequency: ReturnFrequency,
+        price_field: PriceField,
+        *,
+        refresh_if_stale: bool = True,
+    ) -> PriceHistory: ...
 ```
 
 The domain/application layers must not know whether the data came from Yahoo Finance, another vendor, cache, or fixtures.
+
+Week 2 adds `CurrentUniverseProvider` for a current constituent snapshot and `AssetCatalog` for full
+asset metadata. The Wikipedia adapter implements both responsibilities. SQLite, HTTP, pandas, and
+yfinance remain infrastructure concerns; the application consumes immutable domain values only.
 
 ### ExpectedReturnEstimator
 

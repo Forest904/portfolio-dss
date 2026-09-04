@@ -1,17 +1,22 @@
 [project]
 name = "portfolio-dss-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "FastAPI backend for the Portfolio Decision Support System"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "beautifulsoup4>=4.13,<5.0",
     "fastapi>=0.116,<1.0",
+    "httpx>=0.28,<1.0",
+    "lxml>=5.4,<7.0",
+    "pandas>=2.3,<4.0",
     "uvicorn[standard]>=0.35,<1.0",
+    "yfinance>=0.2.65,<2.0",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28,<1.0",
     "mypy>=1.17,<2.0",
+    "pandas-stubs>=2.3,<4.0",
     "pytest>=8.4,<10.0",
     "ruff>=0.12,<1.0",
 ]

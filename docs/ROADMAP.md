@@ -8,6 +8,8 @@ Phase B is the target. Every milestone should leave the repository in a working 
 
 **Goal:** freeze conventions and create the technical skeleton.
 
+**State:** complete
+
 Deliverables:
 
 - repository structure;
@@ -28,6 +30,8 @@ Exit criteria:
 ## Week 2 — Market data and portfolio valuation
 
 **Goal:** reliable data path.
+
+**State:** complete
 
 Deliverables:
 

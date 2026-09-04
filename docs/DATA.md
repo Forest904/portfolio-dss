@@ -12,7 +12,9 @@ Phase A/B operates on:
 
 Market data must be accessed through `MarketDataProvider`.
 
-The first implementation may use Yahoo Finance through an appropriate Python adapter/library, but no analytical model should depend directly on that library.
+The first implementation uses Yahoo Finance through `yfinance`. The infrastructure adapter requests
+daily data with automatic OHLC adjustment disabled and selects the adjusted-close column explicitly.
+No analytical model depends on pandas or yfinance.
 
 ## Universe versioning
 
@@ -20,7 +22,8 @@ The S&P 500 is not a permanent list of the same 500 companies.
 
 The system should attach an `as_of_date` to the universe definition.
 
-For the course project, using the current constituent list for interactive analysis is acceptable, but backtesting documentation must clearly state whether historical constituents are reconstructed. If they are not, survivorship bias must be acknowledged.
+Wikipedia supplies the current constituent snapshot. Historical constituents are not reconstructed;
+valuation responses disclose this current-membership assumption and its survivorship-bias limitation.
 
 ## Benchmark convention
 
@@ -70,7 +73,7 @@ Analytics/model inputs
 
 ## Caching
 
-Development should use a local cache keyed by:
+Development uses a SQLite read-through cache keyed by:
 
 - provider;
 - asset;
@@ -80,7 +83,10 @@ Development should use a local cache keyed by:
 
 Cache metadata should include retrieval time.
 
-The cache is a performance/reproducibility aid, not the source of business truth.
+Normalized payloads include their retrieval time and SHA-256 content hash. Explicit historical
+requests reuse their cached snapshot. Current requests refresh after their TTL; if refresh fails, a
+cached result may be returned only inside the configured seven-day bound and is marked as a stale
+fallback. The cache is a performance/reproducibility aid, not the source of business truth.
 
 ## Reproducibility
 

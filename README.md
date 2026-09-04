@@ -2,7 +2,7 @@
 
 Portfolio DSS is an interactive decision support system that helps non-expert investors understand and compare stock portfolios. It makes assumptions, risk, and uncertainty visible; it is not a trading bot or a promise of future performance.
 
-## Week 1 foundation
+## Week 2 data path
 
 The repository is a modular monorepo containing:
 
@@ -11,7 +11,31 @@ The repository is a modular monorepo containing:
 - `docs`: product, architecture, data, API, testing, and decision records;
 - `data`, `notebooks`, and `scripts`: placeholders for later roadmap work.
 
-The only Week 1 HTTP contract is `GET /health`. Live market data, portfolio analysis, and optimization begin in later roadmap weeks.
+The backend now retrieves current S&P 500 constituents from Wikipedia and adjusted daily prices
+from Yahoo Finance through replaceable adapters. Normalized source responses are cached in
+`data/market_data.sqlite3` for traceability and repeatable valuation snapshots.
+
+Available endpoints:
+
+- `GET /health`;
+- `GET /api/v1/universes/sp500`;
+- `GET /api/v1/assets/{ticker}`;
+- `POST /api/v1/portfolios/valuation`.
+
+Example valuation request:
+
+```json
+{
+  "positions": [
+    {"ticker": "AAPL", "quantity": "10"},
+    {"ticker": "MSFT", "quantity": "4.5"}
+  ],
+  "as_of": "2026-09-04"
+}
+```
+
+Omit `as_of` to use the latest available completed US session. The response always reports the
+actual common valuation date, source provenance, assumptions, and a deterministic snapshot hash.
 
 ## Prerequisites
 
@@ -68,3 +92,10 @@ GitHub Actions runs these commands independently for the backend and frontend us
 The initial convention is USD, daily adjusted-close prices, daily simple returns, and 252 trading periods per year. Missing values are never imputed silently; series are aligned by timestamp intersection and inadequate data will be reported as an error by the Week 2 data pipeline. S&P 500 comparisons use adjusted SPY prices as an explicitly labelled total-return ETF proxy.
 
 See [`docs/`](docs/) for scope, roadmap, mathematical model, and architecture decisions.
+
+### Market-data settings
+
+The defaults can be changed with `PORTFOLIO_DSS_CACHE_PATH`,
+`PORTFOLIO_DSS_PROVIDER_TIMEOUT`, `PORTFOLIO_DSS_PRICE_CACHE_TTL_HOURS`,
+`PORTFOLIO_DSS_UNIVERSE_CACHE_TTL_HOURS`, `PORTFOLIO_DSS_STALE_FALLBACK_DAYS`, and
+`PORTFOLIO_DSS_MAX_CONSECUTIVE_MISSING`.
