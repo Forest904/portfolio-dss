@@ -10,7 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.router import router
-from app.application import ApplicationError, PortfolioValuationService
+from app.application import ApplicationError, PortfolioAnalysisService, PortfolioValuationService
 from app.core.config import API_DESCRIPTION, API_TITLE, API_VERSION, Settings, load_settings
 from app.domain import CurrentUniverseProvider, MarketDataProvider
 from app.infrastructure import SQLiteCache, WikipediaSP500Provider, YahooFinanceMarketDataProvider
@@ -46,6 +46,12 @@ def create_app(
         prices,
         clock=clock,
         maximum_staleness_days=runtime.stale_fallback_days,
+        maximum_consecutive_missing=runtime.maximum_consecutive_missing,
+    )
+    application.state.analysis_service = PortfolioAnalysisService(
+        universe,
+        prices,
+        clock=clock,
         maximum_consecutive_missing=runtime.maximum_consecutive_missing,
     )
 

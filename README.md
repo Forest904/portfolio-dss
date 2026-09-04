@@ -2,7 +2,7 @@
 
 Portfolio DSS is an interactive decision support system that helps non-expert investors understand and compare stock portfolios. It makes assumptions, risk, and uncertainty visible; it is not a trading bot or a promise of future performance.
 
-## Week 2 data path
+## Week 3 historical analytics
 
 The repository is a modular monorepo containing:
 
@@ -11,16 +11,19 @@ The repository is a modular monorepo containing:
 - `docs`: product, architecture, data, API, testing, and decision records;
 - `data`, `notebooks`, and `scripts`: placeholders for later roadmap work.
 
-The backend now retrieves current S&P 500 constituents from Wikipedia and adjusted daily prices
-from Yahoo Finance through replaceable adapters. Normalized source responses are cached in
-`data/market_data.sqlite3` for traceability and repeatable valuation snapshots.
+The backend retrieves current S&P 500 constituents from Wikipedia and adjusted daily prices from
+Yahoo Finance through replaceable adapters. It now analyzes entered buy-and-hold portfolios against
+an equal-dollar buy-and-hold alternative and the SPY total-return proxy on one aligned history
+window. Normalized source responses are cached in `data/market_data.sqlite3` for traceability and
+repeatable results.
 
 Available endpoints:
 
 - `GET /health`;
 - `GET /api/v1/universes/sp500`;
 - `GET /api/v1/assets/{ticker}`;
-- `POST /api/v1/portfolios/valuation`.
+- `POST /api/v1/portfolios/valuation`;
+- `POST /api/v1/portfolios/analyze`.
 
 Example valuation request:
 
@@ -36,6 +39,12 @@ Example valuation request:
 
 Omit `as_of` to use the latest available completed US session. The response always reports the
 actual common valuation date, source provenance, assumptions, and a deterministic snapshot hash.
+
+The analysis endpoint accepts the same positions plus an optional `history.start` and
+`history.end`. It defaults to the latest three-year window and returns chart-ready performance,
+annualized return/volatility, covariance/correlation, holding and sector concentration, benchmark
+comparisons, diagnostics, provenance, and a deterministic analysis hash. The web app provides the
+corresponding interactive analysis form and progressively disclosed results.
 
 ## Prerequisites
 

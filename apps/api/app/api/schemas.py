@@ -35,6 +35,16 @@ class PortfolioValuationRequest(ApiModel):
     as_of: date | None = None
 
 
+class HistoryRequest(ApiModel):
+    start: date | None = None
+    end: date | None = None
+
+
+class PortfolioAnalysisRequest(ApiModel):
+    positions: list[PositionRequest] = Field(min_length=1)
+    history: HistoryRequest | None = None
+
+
 class ProvenanceResponse(ApiModel):
     provider: str
     retrieved_at: datetime
@@ -94,3 +104,102 @@ class UniverseResponse(ApiModel):
     assets: list[AssetResponse]
     provenance: ProvenanceResponse
     assumptions: list[str]
+
+
+class AnalysisValuationPositionResponse(ValuationPositionResponse):
+    sector: str
+
+
+class AnalysisValuationResponse(ApiModel):
+    valued_on: date
+    total_market_value: MoneyResponse
+    positions: list[AnalysisValuationPositionResponse]
+
+
+class ExcludedObservationResponse(ApiModel):
+    asset_id: str
+    count: int
+
+
+class AnalysisWindowResponse(ApiModel):
+    requested_start: date
+    requested_end: date
+    effective_start: date
+    effective_end: date
+    aligned_price_observations: int
+    return_observations: int
+    excluded_observations: list[ExcludedObservationResponse]
+
+
+class ComparatorSeriesValueResponse(ApiModel):
+    daily_return: float | None
+    cumulative_return: float
+
+
+class AnalysisSeriesPointResponse(ApiModel):
+    date: date
+    current: ComparatorSeriesValueResponse
+    equal_weight: ComparatorSeriesValueResponse
+    sp500_proxy: ComparatorSeriesValueResponse
+
+
+class PerformanceSummaryResponse(ApiModel):
+    total_return: float
+    annualized_return: float
+    annualized_volatility: float
+
+
+class PerformanceComparisonResponse(ApiModel):
+    current: PerformanceSummaryResponse
+    equal_weight: PerformanceSummaryResponse
+    sp500_proxy: PerformanceSummaryResponse
+    current_vs_sp500_annualized_return: float
+    current_vs_sp500_annualized_volatility: float
+    equal_weight_vs_sp500_annualized_return: float
+    equal_weight_vs_sp500_annualized_volatility: float
+
+
+class LabelledMatrixResponse(ApiModel):
+    asset_ids: list[str]
+    values: list[list[float | None]]
+    frequency: Literal["daily"]
+    annualization_periods: int | None
+    estimator: str
+
+
+class ConcentrationComponentResponse(ApiModel):
+    id: str
+    weight: float
+
+
+class ConcentrationSummaryResponse(ApiModel):
+    components: list[ConcentrationComponentResponse]
+    largest_id: str
+    largest_weight: float
+    top_three_weight: float
+    hhi: float
+    effective_count: float
+
+
+class AnalysisConcentrationResponse(ApiModel):
+    assets: ConcentrationSummaryResponse
+    sectors: ConcentrationSummaryResponse
+
+
+class AnalysisProvenanceResponse(ApiModel):
+    universe: UniverseReferenceResponse
+    price_data: ProvenanceResponse
+
+
+class PortfolioAnalysisResponse(ApiModel):
+    valuation: AnalysisValuationResponse
+    window: AnalysisWindowResponse
+    series: list[AnalysisSeriesPointResponse]
+    performance: PerformanceComparisonResponse
+    covariance: LabelledMatrixResponse
+    correlation: LabelledMatrixResponse
+    concentration: AnalysisConcentrationResponse
+    provenance: AnalysisProvenanceResponse
+    assumptions: list[str]
+    diagnostics: list[str]
+    analysis_hash: str

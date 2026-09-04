@@ -12,7 +12,7 @@ The Week 1 operational endpoint is intentionally unversioned because it reports 
 {
   "status": "ok",
   "service": "portfolio-dss-api",
-  "version": "0.2.0"
+  "version": "0.3.0"
 }
 ```
 
@@ -67,15 +67,15 @@ The response contains:
 
 ## Portfolio analysis
 
-### `POST /api/v1/portfolios/analyze` (planned for Week 3)
+### `POST /api/v1/portfolios/analyze`
 
 Input concept:
 
 ```json
 {
   "positions": [
-    {"ticker": "AAPL", "quantity": 10},
-    {"ticker": "MSFT", "quantity": 4}
+    {"ticker": "AAPL", "quantity": "10"},
+    {"ticker": "MSFT", "quantity": "4"}
   ],
   "history": {
     "start": "2021-01-01",
@@ -84,14 +84,23 @@ Input concept:
 }
 ```
 
+`history`, `start`, and `end` are optional. The end defaults to the latest completed US session;
+the start defaults to three calendar years before the end. Analysis requires 253 common adjusted
+closes (252 daily returns).
+
 Output sections:
 
-- valuation;
-- historical performance;
-- risk metrics;
-- correlation/diversification;
-- benchmark comparison;
-- assumptions.
+- end-date valuation and asset/sector concentration;
+- requested and effective aligned windows plus data-quality diagnostics;
+- chart-ready daily and cumulative returns for the buy-and-hold current portfolio, a buy-and-hold
+  equal-dollar alternative, and the SPY benchmark proxy;
+- total return, geometric CAGR, and annualized sample volatility for all three paths;
+- labelled annualized sample covariance and Pearson correlation matrices;
+- universe/price provenance, an analysis hash, diagnostics, and assumptions.
+
+Undefined correlations for zero-variance assets are returned as JSON `null` and explained in
+`diagnostics`. Comparisons use exactly the same timestamp intersection. API numerical values are
+not presentation-rounded.
 
 ## Optimize existing portfolio universe
 

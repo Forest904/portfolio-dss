@@ -32,6 +32,40 @@ def normalize_ticker(value: str) -> str:
     return ticker
 
 
+def normalize_positions(
+    positions: Sequence[tuple[str, Decimal]],
+) -> tuple[tuple[str, Decimal], ...]:
+    if not positions:
+        raise invalid_input("EMPTY_PORTFOLIO", "At least one position is required.")
+    normalized: list[tuple[str, Decimal]] = []
+    for raw_ticker, quantity in positions:
+        ticker = normalize_ticker(raw_ticker)
+        if not quantity.is_finite() or quantity <= 0:
+            raise invalid_input(
+                "INVALID_QUANTITY",
+                "Position quantities must be finite and positive.",
+                ticker=ticker,
+            )
+        normalized.append((ticker, quantity))
+    tickers = [ticker for ticker, _ in normalized]
+    if len(set(tickers)) != len(tickers):
+        raise invalid_input("DUPLICATE_TICKER", "Portfolio tickers must be unique.")
+    normalized.sort(key=lambda item: item[0])
+    return tuple(normalized)
+
+
+def validate_supported_assets(
+    requested_assets: tuple[str, ...], supported_assets: set[str]
+) -> None:
+    unsupported = [ticker for ticker in requested_assets if ticker not in supported_assets]
+    if unsupported:
+        raise invalid_input(
+            "UNSUPPORTED_TICKER",
+            "Every portfolio ticker must be a current S&P 500 constituent.",
+            tickers=unsupported,
+        )
+
+
 def latest_completed_session_ceiling(now: datetime) -> date:
     local_now = now.astimezone(NEW_YORK)
     if local_now.timetz().replace(tzinfo=None) < time(16, 30):
@@ -136,41 +170,21 @@ class PortfolioValuationService:
     def value(
         self, positions: Sequence[tuple[str, Decimal]], as_of: date | None = None
     ) -> PortfolioValuationSnapshot:
-        if not positions:
-            raise invalid_input("EMPTY_PORTFOLIO", "At least one position is required.")
         now = self._clock()
         ceiling = as_of or latest_completed_session_ceiling(now)
         if ceiling > now.astimezone(NEW_YORK).date():
             raise invalid_input("INVALID_AS_OF", "The as-of date cannot be in the future.")
 
-        normalized: list[tuple[str, Decimal]] = []
-        for raw_ticker, quantity in positions:
-            ticker = normalize_ticker(raw_ticker)
-            if not quantity.is_finite() or quantity <= 0:
-                raise invalid_input(
-                    "INVALID_QUANTITY",
-                    "Position quantities must be finite and positive.",
-                    ticker=ticker,
-                )
-            normalized.append((ticker, quantity))
-        tickers = [ticker for ticker, _ in normalized]
-        if len(set(tickers)) != len(tickers):
-            raise invalid_input("DUPLICATE_TICKER", "Portfolio tickers must be unique.")
-        normalized.sort(key=lambda item: item[0])
+        normalized = normalize_positions(positions)
         requested_assets = tuple(ticker for ticker, _ in normalized)
 
         try:
             universe_snapshot = self._universe_provider.get_current_universe()
         except ExternalDataUnavailableError as exc:
             raise data_unavailable(str(exc), source="wikipedia") from exc
-        supported = {asset.ticker for asset in universe_snapshot.assets}
-        unsupported = [ticker for ticker in requested_assets if ticker not in supported]
-        if unsupported:
-            raise invalid_input(
-                "UNSUPPORTED_TICKER",
-                "Every portfolio ticker must be a current S&P 500 constituent.",
-                tickers=unsupported,
-            )
+        validate_supported_assets(
+            requested_assets, {asset.ticker for asset in universe_snapshot.assets}
+        )
 
         start = ceiling - timedelta(days=self._maximum_staleness_days + 3)
         try:

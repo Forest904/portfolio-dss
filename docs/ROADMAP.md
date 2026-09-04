@@ -50,6 +50,8 @@ Exit criteria:
 
 **Goal:** analyze current portfolio.
 
+**State:** complete
+
 Deliverables:
 
 - return series;

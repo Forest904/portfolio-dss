@@ -1,4 +1,5 @@
 import { HealthStatus } from "@/features/system-status/health-status";
+import { PortfolioAnalysisWorkspace } from "@/features/portfolio-analysis/portfolio-analysis";
 import { checkApiHealth } from "@/lib/api-health";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ export default async function Home() {
         </header>
 
         <HealthStatus availability={availability} />
+
+        <PortfolioAnalysisWorkspace />
 
         <section className="principles" aria-label="Product principles">
           <article>

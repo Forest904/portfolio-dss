@@ -3,11 +3,25 @@
 from fastapi import APIRouter, Request
 
 from app.api.schemas import (
+    AnalysisConcentrationResponse,
+    AnalysisProvenanceResponse,
+    AnalysisSeriesPointResponse,
+    AnalysisValuationPositionResponse,
+    AnalysisValuationResponse,
+    AnalysisWindowResponse,
     AssetResponse,
     BenchmarkResponse,
+    ComparatorSeriesValueResponse,
+    ConcentrationSummaryResponse,
     ErrorResponse,
+    ExcludedObservationResponse,
     HealthResponse,
+    LabelledMatrixResponse,
     MoneyResponse,
+    PerformanceComparisonResponse,
+    PerformanceSummaryResponse,
+    PortfolioAnalysisRequest,
+    PortfolioAnalysisResponse,
     PortfolioValuationRequest,
     PortfolioValuationResponse,
     ProvenanceResponse,
@@ -15,12 +29,25 @@ from app.api.schemas import (
     UniverseResponse,
     ValuationPositionResponse,
 )
-from app.application import PortfolioValuationService, normalize_ticker
+from app.application import PortfolioAnalysisService, PortfolioValuationService, normalize_ticker
 from app.application.errors import data_unavailable, not_found
 from app.core.config import API_VERSION, SERVICE_NAME
-from app.domain import CurrentUniverseProvider, ExternalDataUnavailableError
+from app.domain import (
+    DEFAULT_FINANCIAL_CONVENTIONS,
+    CurrentUniverseProvider,
+    ExternalDataUnavailableError,
+)
 
 router = APIRouter()
+
+
+def performance_response(value: object) -> PerformanceSummaryResponse:
+    return PerformanceSummaryResponse.model_validate(value, from_attributes=True)
+
+
+def concentration_response(value: object) -> ConcentrationSummaryResponse:
+    result = ConcentrationSummaryResponse.model_validate(value, from_attributes=True)
+    return result
 
 
 def provenance_response(value: object) -> ProvenanceResponse:
@@ -71,6 +98,128 @@ def value_portfolio(
         price_data=provenance_response(snapshot.price_provenance),
         snapshot_hash=snapshot.snapshot_hash,
         assumptions=list(snapshot.assumptions),
+    )
+
+
+@router.post(
+    "/api/v1/portfolios/analyze",
+    response_model=PortfolioAnalysisResponse,
+    responses={422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+    tags=["portfolios"],
+)
+def analyze_portfolio(
+    payload: PortfolioAnalysisRequest, request: Request
+) -> PortfolioAnalysisResponse:
+    service: PortfolioAnalysisService = request.app.state.analysis_service
+    report = service.analyze(
+        [(position.ticker, position.quantity) for position in payload.positions],
+        start=payload.history.start if payload.history else None,
+        end=payload.history.end if payload.history else None,
+    )
+    analytics = report.analytics
+    return PortfolioAnalysisResponse(
+        valuation=AnalysisValuationResponse(
+            valued_on=report.valuation.valued_on,
+            total_market_value=MoneyResponse(
+                amount=report.valuation.total_market_value, currency="USD"
+            ),
+            positions=[
+                AnalysisValuationPositionResponse(
+                    ticker=line.ticker,
+                    quantity=line.quantity,
+                    unit_price=MoneyResponse(amount=line.unit_price, currency="USD"),
+                    market_value=MoneyResponse(amount=line.market_value, currency="USD"),
+                    weight=line.weight,
+                    sector=line.sector,
+                )
+                for line in report.valuation.positions
+            ],
+        ),
+        window=AnalysisWindowResponse(
+            requested_start=report.window.requested_start,
+            requested_end=report.window.requested_end,
+            effective_start=report.window.effective_start,
+            effective_end=report.window.effective_end,
+            aligned_price_observations=report.window.aligned_price_observations,
+            return_observations=report.window.return_observations,
+            excluded_observations=[
+                ExcludedObservationResponse(asset_id=asset_id, count=count)
+                for asset_id, count in report.window.excluded_observations
+            ],
+        ),
+        series=[
+            AnalysisSeriesPointResponse(
+                date=current.observed_on,
+                current=ComparatorSeriesValueResponse(
+                    daily_return=current.daily_return,
+                    cumulative_return=current.cumulative_return,
+                ),
+                equal_weight=ComparatorSeriesValueResponse(
+                    daily_return=equal_weight.daily_return,
+                    cumulative_return=equal_weight.cumulative_return,
+                ),
+                sp500_proxy=ComparatorSeriesValueResponse(
+                    daily_return=benchmark.daily_return,
+                    cumulative_return=benchmark.cumulative_return,
+                ),
+            )
+            for current, equal_weight, benchmark in zip(
+                analytics.current_series,
+                analytics.equal_weight_series,
+                analytics.benchmark_series,
+                strict=True,
+            )
+        ],
+        performance=PerformanceComparisonResponse(
+            current=performance_response(analytics.current_performance),
+            equal_weight=performance_response(analytics.equal_weight_performance),
+            sp500_proxy=performance_response(analytics.benchmark_performance),
+            current_vs_sp500_annualized_return=(
+                analytics.current_performance.annualized_return
+                - analytics.benchmark_performance.annualized_return
+            ),
+            current_vs_sp500_annualized_volatility=(
+                analytics.current_performance.annualized_volatility
+                - analytics.benchmark_performance.annualized_volatility
+            ),
+            equal_weight_vs_sp500_annualized_return=(
+                analytics.equal_weight_performance.annualized_return
+                - analytics.benchmark_performance.annualized_return
+            ),
+            equal_weight_vs_sp500_annualized_volatility=(
+                analytics.equal_weight_performance.annualized_volatility
+                - analytics.benchmark_performance.annualized_volatility
+            ),
+        ),
+        covariance=LabelledMatrixResponse(
+            asset_ids=list(analytics.covariance.asset_ids),
+            values=[list(row) for row in analytics.covariance.values],
+            frequency="daily",
+            annualization_periods=DEFAULT_FINANCIAL_CONVENTIONS.annualization_periods,
+            estimator="sample_covariance",
+        ),
+        correlation=LabelledMatrixResponse(
+            asset_ids=list(analytics.correlation.asset_ids),
+            values=[list(row) for row in analytics.correlation.values],
+            frequency="daily",
+            annualization_periods=None,
+            estimator="pearson_sample_correlation",
+        ),
+        concentration=AnalysisConcentrationResponse(
+            assets=concentration_response(analytics.asset_concentration),
+            sectors=concentration_response(analytics.sector_concentration),
+        ),
+        provenance=AnalysisProvenanceResponse(
+            universe=UniverseReferenceResponse(
+                id="sp500",
+                as_of=report.universe_as_of,
+                provenance=provenance_response(report.universe_provenance),
+            ),
+            price_data=provenance_response(report.price_provenance),
+        ),
+        assumptions=list(report.assumptions),
+        diagnostics=list(report.diagnostics),
+        analysis_hash=report.analysis_hash,
     )
 
 
