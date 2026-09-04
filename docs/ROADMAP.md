@@ -70,6 +70,8 @@ Exit criteria:
 
 **Goal:** implement the mathematical core from the professor's note.
 
+**State:** complete
+
 Deliverables:
 
 - `HistoricalMeanEstimator`;

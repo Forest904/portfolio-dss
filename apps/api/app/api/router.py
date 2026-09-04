@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Request
 
 from app.api.schemas import (
+    AllocationComparisonResponse,
     AnalysisConcentrationResponse,
     AnalysisProvenanceResponse,
     AnalysisSeriesPointResponse,
@@ -15,21 +16,34 @@ from app.api.schemas import (
     ConcentrationSummaryResponse,
     ErrorResponse,
     ExcludedObservationResponse,
+    ExpectedReturnModelResponse,
     HealthResponse,
     LabelledMatrixResponse,
     MoneyResponse,
+    OptimizationComparisonResponse,
+    OptimizationConfigurationResponse,
     PerformanceComparisonResponse,
     PerformanceSummaryResponse,
     PortfolioAnalysisRequest,
     PortfolioAnalysisResponse,
+    PortfolioMetricsResponse,
+    PortfolioOptimizationRequest,
+    PortfolioOptimizationResponse,
     PortfolioValuationRequest,
     PortfolioValuationResponse,
     ProvenanceResponse,
+    RiskModelResponse,
+    SolverDiagnosticsResponse,
     UniverseReferenceResponse,
     UniverseResponse,
     ValuationPositionResponse,
 )
-from app.application import PortfolioAnalysisService, PortfolioValuationService, normalize_ticker
+from app.application import (
+    PortfolioAnalysisService,
+    PortfolioOptimizationService,
+    PortfolioValuationService,
+    normalize_ticker,
+)
 from app.application.errors import data_unavailable, not_found
 from app.core.config import API_VERSION, SERVICE_NAME
 from app.domain import (
@@ -48,6 +62,10 @@ def performance_response(value: object) -> PerformanceSummaryResponse:
 def concentration_response(value: object) -> ConcentrationSummaryResponse:
     result = ConcentrationSummaryResponse.model_validate(value, from_attributes=True)
     return result
+
+
+def portfolio_metrics_response(value: object) -> PortfolioMetricsResponse:
+    return PortfolioMetricsResponse.model_validate(value, from_attributes=True)
 
 
 def provenance_response(value: object) -> ProvenanceResponse:
@@ -220,6 +238,113 @@ def analyze_portfolio(
         assumptions=list(report.assumptions),
         diagnostics=list(report.diagnostics),
         analysis_hash=report.analysis_hash,
+    )
+
+
+@router.post(
+    "/api/v1/portfolios/optimize",
+    response_model=PortfolioOptimizationResponse,
+    responses={
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+    tags=["portfolios"],
+)
+def optimize_portfolio(
+    payload: PortfolioOptimizationRequest, request: Request
+) -> PortfolioOptimizationResponse:
+    service: PortfolioOptimizationService = request.app.state.optimization_service
+    report = service.optimize(
+        [(position.ticker, position.quantity) for position in payload.positions],
+        risk_aversion=payload.risk_aversion,
+        max_weight=payload.constraints.max_weight if payload.constraints else None,
+        start=payload.history.start if payload.history else None,
+        end=payload.history.end if payload.history else None,
+    )
+    current = report.current_metrics
+    recommended = report.optimization.metrics
+    signal = report.expected_returns
+    risk = report.risk_estimate
+    solver = report.optimization.solver
+    return PortfolioOptimizationResponse(
+        window=AnalysisWindowResponse(
+            requested_start=report.window.requested_start,
+            requested_end=report.window.requested_end,
+            effective_start=report.window.effective_start,
+            effective_end=report.window.effective_end,
+            aligned_price_observations=report.window.aligned_price_observations,
+            return_observations=report.window.return_observations,
+            excluded_observations=[
+                ExcludedObservationResponse(asset_id=asset_id, count=count)
+                for asset_id, count in report.window.excluded_observations
+            ],
+        ),
+        allocations=[
+            AllocationComparisonResponse(
+                ticker=item.asset_id,
+                current_weight=item.current_weight,
+                recommended_weight=item.recommended_weight,
+                weight_change=item.weight_change,
+            )
+            for item in report.allocations
+        ],
+        comparison=OptimizationComparisonResponse(
+            current=portfolio_metrics_response(current),
+            recommended=portfolio_metrics_response(recommended),
+            expected_return_change=recommended.expected_return - current.expected_return,
+            variance_change=recommended.variance - current.variance,
+            volatility_change=recommended.volatility - current.volatility,
+            objective_change=recommended.objective_value - current.objective_value,
+        ),
+        expected_return_model=ExpectedReturnModelResponse(
+            estimator=signal.estimator_name,
+            asset_ids=list(signal.asset_ids),
+            annualized_expected_returns=list(signal.expected_returns),
+            frequency="daily",
+            return_convention="simple",
+            annualization_periods=signal.annualization_periods,
+            estimation_start=signal.estimation_start,
+            estimation_end=signal.estimation_end,
+            observations=signal.observations,
+        ),
+        risk_model=RiskModelResponse(
+            estimator=risk.estimator_name,
+            asset_ids=list(risk.asset_ids),
+            annualized_covariance=[list(row) for row in risk.covariance_matrix],
+            frequency="daily",
+            return_convention="simple",
+            annualization_periods=risk.annualization_periods,
+            estimation_start=risk.estimation_start,
+            estimation_end=risk.estimation_end,
+            observations=risk.observations,
+            missing_data_policy="no_imputation",
+        ),
+        configuration=OptimizationConfigurationResponse(
+            risk_aversion=report.risk_aversion, max_weight=report.max_weight
+        ),
+        solver=SolverDiagnosticsResponse(
+            solver=solver.solver_name,
+            success=solver.success,
+            status_code=solver.status_code,
+            message=solver.message,
+            iterations=solver.iterations,
+            budget_residual=solver.budget_residual,
+            minimum_weight=solver.minimum_weight,
+            max_weight_violation=solver.max_weight_violation,
+            binding_asset_ids=list(solver.binding_asset_ids),
+        ),
+        provenance=AnalysisProvenanceResponse(
+            universe=UniverseReferenceResponse(
+                id="sp500",
+                as_of=report.universe_as_of,
+                provenance=provenance_response(report.universe_provenance),
+            ),
+            price_data=provenance_response(report.price_provenance),
+        ),
+        assumptions=list(report.assumptions),
+        diagnostics=list(report.diagnostics),
+        optimization_hash=report.optimization_hash,
     )
 
 

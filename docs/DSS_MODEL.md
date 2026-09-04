@@ -50,6 +50,10 @@ Initial implementations:
 1. `HistoricalMeanEstimator`
 2. `SimpleForecastEstimator`
 
+`HistoricalMeanEstimator` uses the arithmetic mean of aligned daily simple returns and annualizes
+it by 252. This estimated expectation is intentionally distinct from the geometric CAGR used to
+describe observed historical portfolio performance.
+
 The optimizer never depends on the concrete estimator.
 
 Future estimators may include sentiment, fundamentals, macroeconomic signals, or advanced ML.
@@ -95,6 +99,11 @@ The risk contract must expose metadata describing:
 - covariance estimator name.
 
 This allows future replacement by shrinkage or robust covariance methods.
+
+The initial implementation uses annualized sample covariance over the exact return observations
+used by the expected-return estimator. The Week 4 solver is SciPy SLSQP with independently checked
+long-only, budget, and optional uniform maximum-weight constraints. Risk aversion is an explicit
+finite non-negative API input until the guided mapping is introduced in Week 6.
 
 ## Efficient frontier
 

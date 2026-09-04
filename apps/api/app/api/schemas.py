@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ApiModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
 class HealthResponse(ApiModel):
@@ -43,6 +43,18 @@ class HistoryRequest(ApiModel):
 class PortfolioAnalysisRequest(ApiModel):
     positions: list[PositionRequest] = Field(min_length=1)
     history: HistoryRequest | None = None
+
+
+class OptimizationConstraintsRequest(ApiModel):
+    max_weight: float | None = Field(default=None, gt=0.0, le=1.0)
+
+
+class PortfolioOptimizationRequest(ApiModel):
+    positions: list[PositionRequest] = Field(min_length=1)
+    risk_aversion: float = Field(ge=0.0)
+    history: HistoryRequest | None = None
+    constraints: OptimizationConstraintsRequest | None = None
+    expected_return_estimator: Literal["historical_mean"] = "historical_mean"
 
 
 class ProvenanceResponse(ApiModel):
@@ -203,3 +215,82 @@ class PortfolioAnalysisResponse(ApiModel):
     assumptions: list[str]
     diagnostics: list[str]
     analysis_hash: str
+
+
+class AllocationComparisonResponse(ApiModel):
+    ticker: str
+    current_weight: float
+    recommended_weight: float
+    weight_change: float
+
+
+class PortfolioMetricsResponse(ApiModel):
+    expected_return: float
+    variance: float
+    volatility: float
+    objective_value: float
+
+
+class OptimizationComparisonResponse(ApiModel):
+    current: PortfolioMetricsResponse
+    recommended: PortfolioMetricsResponse
+    expected_return_change: float
+    variance_change: float
+    volatility_change: float
+    objective_change: float
+
+
+class ExpectedReturnModelResponse(ApiModel):
+    estimator: str
+    asset_ids: list[str]
+    annualized_expected_returns: list[float]
+    frequency: Literal["daily"]
+    return_convention: Literal["simple"]
+    annualization_periods: int
+    estimation_start: date
+    estimation_end: date
+    observations: int
+
+
+class RiskModelResponse(ApiModel):
+    estimator: str
+    asset_ids: list[str]
+    annualized_covariance: list[list[float]]
+    frequency: Literal["daily"]
+    return_convention: Literal["simple"]
+    annualization_periods: int
+    estimation_start: date
+    estimation_end: date
+    observations: int
+    missing_data_policy: Literal["no_imputation"]
+
+
+class OptimizationConfigurationResponse(ApiModel):
+    risk_aversion: float
+    max_weight: float | None
+
+
+class SolverDiagnosticsResponse(ApiModel):
+    solver: str
+    success: bool
+    status_code: int
+    message: str
+    iterations: int
+    budget_residual: float
+    minimum_weight: float
+    max_weight_violation: float
+    binding_asset_ids: list[str]
+
+
+class PortfolioOptimizationResponse(ApiModel):
+    window: AnalysisWindowResponse
+    allocations: list[AllocationComparisonResponse]
+    comparison: OptimizationComparisonResponse
+    expected_return_model: ExpectedReturnModelResponse
+    risk_model: RiskModelResponse
+    configuration: OptimizationConfigurationResponse
+    solver: SolverDiagnosticsResponse
+    provenance: AnalysisProvenanceResponse
+    assumptions: list[str]
+    diagnostics: list[str]
+    optimization_hash: str

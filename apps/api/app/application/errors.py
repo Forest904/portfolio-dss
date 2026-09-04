@@ -25,3 +25,12 @@ def not_found(code: str, message: str, **details: Any) -> ApplicationError:
 
 def data_unavailable(message: str, **details: Any) -> ApplicationError:
     return ApplicationError("MARKET_DATA_UNAVAILABLE", message, 503, details)
+
+
+def optimization_failed(*, details: dict[str, object]) -> ApplicationError:
+    return ApplicationError(
+        "OPTIMIZATION_FAILED",
+        "The optimizer could not produce a valid recommended allocation.",
+        500,
+        dict(details),
+    )

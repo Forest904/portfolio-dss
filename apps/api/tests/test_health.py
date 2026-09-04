@@ -11,5 +11,5 @@ def test_health_endpoint_returns_exact_contract() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "portfolio-dss-api",
-        "version": "0.3.0",
+        "version": "0.4.0",
     }

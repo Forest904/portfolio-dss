@@ -166,10 +166,11 @@ Initial implementation: historical sample covariance.
 ```python
 class PortfolioOptimizer(Protocol):
     def optimize(self, request: OptimizationRequest) -> OptimizationResult: ...
-    def efficient_frontier(self, request: FrontierRequest) -> FrontierResult: ...
 ```
 
 The optimizer receives expected returns and risk estimates. It never retrieves market data itself.
+Efficient-frontier generation is added as a separate Week 5 capability rather than forcing it into
+the Week 4 optimizer contract.
 
 ### SimulationEngine
 

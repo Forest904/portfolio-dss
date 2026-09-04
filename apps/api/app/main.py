@@ -10,10 +10,28 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.router import router
-from app.application import ApplicationError, PortfolioAnalysisService, PortfolioValuationService
+from app.application import (
+    ApplicationError,
+    PortfolioAnalysisService,
+    PortfolioOptimizationService,
+    PortfolioValuationService,
+)
 from app.core.config import API_DESCRIPTION, API_TITLE, API_VERSION, Settings, load_settings
-from app.domain import CurrentUniverseProvider, MarketDataProvider
-from app.infrastructure import SQLiteCache, WikipediaSP500Provider, YahooFinanceMarketDataProvider
+from app.domain import (
+    CurrentUniverseProvider,
+    ExpectedReturnEstimator,
+    HistoricalMeanEstimator,
+    HistoricalSampleRiskEstimator,
+    MarketDataProvider,
+    PortfolioOptimizer,
+    RiskEstimator,
+)
+from app.infrastructure import (
+    ScipyMeanVarianceOptimizer,
+    SQLiteCache,
+    WikipediaSP500Provider,
+    YahooFinanceMarketDataProvider,
+)
 
 
 def create_app(
@@ -21,6 +39,9 @@ def create_app(
     settings: Settings | None = None,
     universe_provider: CurrentUniverseProvider | None = None,
     market_data_provider: MarketDataProvider | None = None,
+    expected_return_estimator: ExpectedReturnEstimator | None = None,
+    risk_estimator: RiskEstimator | None = None,
+    portfolio_optimizer: PortfolioOptimizer | None = None,
     clock: Callable[[], datetime] | None = None,
 ) -> FastAPI:
     runtime = settings or load_settings()
@@ -51,6 +72,15 @@ def create_app(
     application.state.analysis_service = PortfolioAnalysisService(
         universe,
         prices,
+        clock=clock,
+        maximum_consecutive_missing=runtime.maximum_consecutive_missing,
+    )
+    application.state.optimization_service = PortfolioOptimizationService(
+        universe,
+        prices,
+        expected_return_estimator or HistoricalMeanEstimator(),
+        risk_estimator or HistoricalSampleRiskEstimator(),
+        portfolio_optimizer or ScipyMeanVarianceOptimizer(),
         clock=clock,
         maximum_consecutive_missing=runtime.maximum_consecutive_missing,
     )

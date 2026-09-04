@@ -58,6 +58,7 @@ class FakeMarketDataProvider:
     def __init__(self, prices: dict[str, list[tuple[date, str]]]) -> None:
         self.prices = prices
         self.calls = 0
+        self.requested_asset_ids: list[tuple[str, ...]] = []
 
     def get_price_history(
         self,
@@ -71,6 +72,7 @@ class FakeMarketDataProvider:
     ) -> PriceHistory:
         self.calls += 1
         ordered = tuple(asset_ids)
+        self.requested_asset_ids.append(ordered)
         series = tuple(
             AssetPriceSeries(
                 ticker,

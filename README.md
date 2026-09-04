@@ -2,7 +2,7 @@
 
 Portfolio DSS is an interactive decision support system that helps non-expert investors understand and compare stock portfolios. It makes assumptions, risk, and uncertainty visible; it is not a trading bot or a promise of future performance.
 
-## Week 3 historical analytics
+## Week 4 mean-variance optimization
 
 The repository is a modular monorepo containing:
 
@@ -17,13 +17,19 @@ an equal-dollar buy-and-hold alternative and the SPY total-return proxy on one a
 window. Normalized source responses are cached in `data/market_data.sqlite3` for traceability and
 repeatable results.
 
+The backend also estimates annualized historical arithmetic returns and sample covariance, then
+uses a replaceable SciPy SLSQP adapter to recommend a long-only, fully invested allocation for an
+explicit risk-aversion value and optional uniform maximum weight. Solver diagnostics and an
+independent constraint check accompany every successful recommendation.
+
 Available endpoints:
 
 - `GET /health`;
 - `GET /api/v1/universes/sp500`;
 - `GET /api/v1/assets/{ticker}`;
 - `POST /api/v1/portfolios/valuation`;
-- `POST /api/v1/portfolios/analyze`.
+- `POST /api/v1/portfolios/analyze`;
+- `POST /api/v1/portfolios/optimize`.
 
 Example valuation request:
 

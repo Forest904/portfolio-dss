@@ -12,7 +12,7 @@ The Week 1 operational endpoint is intentionally unversioned because it reports 
 {
   "status": "ok",
   "service": "portfolio-dss-api",
-  "version": "0.3.0"
+  "version": "0.4.0"
 }
 ```
 
@@ -106,23 +106,21 @@ not presentation-rounded.
 
 ### `POST /api/v1/portfolios/optimize`
 
-Input includes:
+The implemented Week 4 endpoint accepts the current positions, a required finite non-negative
+`risk_aversion`, an optional history window, and an optional uniform
+`constraints.max_weight` in `(0, 1]`. `expected_return_estimator` currently defaults to and only
+accepts `historical_mean`.
 
-- selected assets;
-- expected-return estimator ID;
-- risk preference / lambda;
-- constraints;
-- estimation window.
+The response includes the current and recommended weights, allocation changes, comparable
+estimated return/variance/volatility/objective values, the annualized expected-return vector and
+covariance matrix, model metadata, solver diagnostics and residuals, provenance, assumptions, and
+a deterministic optimization hash. These are model estimates, not the observed CAGR returned by
+the analysis endpoint. The endpoint fetches only the selected assets; SPY is not an optimization
+input.
 
-Output includes:
-
-- target weights;
-- expected return;
-- expected volatility;
-- efficient-frontier context;
-- solver status;
-- decision facts;
-- assumptions.
+Infeasible constraints return `INFEASIBLE_CONSTRAINTS` with status 422. Solver failure or failed
+post-solve verification returns `OPTIMIZATION_FAILED` with status 500 and never returns target
+weights. Efficient-frontier context remains a Week 5 endpoint.
 
 ## Guided portfolio builder
 

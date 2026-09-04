@@ -33,6 +33,9 @@ For every valid result verify:
 - reported expected return matches `mu @ x`;
 - reported variance matches `x.T @ Sigma @ x`;
 - solver status is valid.
+- independently verified budget, lower-bound, and maximum-weight residuals are within tolerance;
+- singular positive-semidefinite covariance is supported while indefinite covariance is rejected;
+- solver non-convergence never produces a recommendation.
 
 ### Monte Carlo
 

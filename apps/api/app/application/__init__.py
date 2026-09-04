@@ -6,6 +6,11 @@ from app.application.analysis import (
     subtract_calendar_years,
 )
 from app.application.errors import ApplicationError
+from app.application.optimization import (
+    AllocationComparison,
+    PortfolioOptimizationReport,
+    PortfolioOptimizationService,
+)
 from app.application.valuation import (
     PortfolioValuationService,
     latest_common_prices,
@@ -15,7 +20,10 @@ from app.application.valuation import (
 
 __all__ = [
     "ApplicationError",
+    "AllocationComparison",
     "PortfolioAnalysisService",
+    "PortfolioOptimizationReport",
+    "PortfolioOptimizationService",
     "align_price_history",
     "PortfolioValuationService",
     "latest_common_prices",
