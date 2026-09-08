@@ -34,6 +34,7 @@ from app.domain import (
     RiskEstimator,
     evaluate_portfolio,
 )
+from app.domain.catalog import UniverseSnapshot
 from app.domain.conventions import FinancialConventions
 from app.domain.frontier import (
     EfficientFrontierGenerator,
@@ -43,6 +44,7 @@ from app.domain.frontier import (
     ProfileConfiguration,
     ProfileName,
 )
+from app.domain.market_data import PriceHistory
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +99,7 @@ def decision_facts(
     references: tuple[ReferencePortfolio, ...],
 ) -> tuple[DecisionFact, ...]:
     facts: list[DecisionFact] = []
-    current = next(reference for reference in references if reference.id == "current")
+    current = next((reference for reference in references if reference.id == "current"), None)
     for profile in frontier.profiles:
         point = next(point for point in frontier.points if point.id == profile.point_id)
         for reference in references:
@@ -121,20 +123,21 @@ def decision_facts(
                         "percentage_points",
                     )
                 )
-        for asset, weight, previous in zip(
-            point.weights.asset_ids, point.weights.weights, current.weights.weights, strict=True
-        ):
-            facts.append(
-                DecisionFact(
-                    f"{profile.name}.{asset}.allocation_change",
-                    profile.name,
-                    "allocation_change",
-                    asset,
-                    "current",
-                    100 * (weight - previous),
-                    "percentage_points",
+        if current is not None:
+            for asset, weight, previous in zip(
+                point.weights.asset_ids, point.weights.weights, current.weights.weights, strict=True
+            ):
+                facts.append(
+                    DecisionFact(
+                        f"{profile.name}.{asset}.allocation_change",
+                        profile.name,
+                        "allocation_change",
+                        asset,
+                        "current",
+                        100 * (weight - previous),
+                        "percentage_points",
+                    )
                 )
-            )
         largest = max(range(len(point.weights.weights)), key=lambda i: point.weights.weights[i])
         facts.append(
             DecisionFact(
@@ -175,6 +178,21 @@ def decision_facts(
 
 
 class PortfolioFrontierService:
+    @property
+    def configuration_signature(self) -> str:
+        """Stable cache identity for the configured model and profile implementations."""
+        return repr(
+            (
+                self._profiles,
+                type(self._returns).__module__,
+                type(self._returns).__qualname__,
+                type(self._risk).__module__,
+                type(self._risk).__qualname__,
+                type(self._generator).__module__,
+                type(self._generator).__qualname__,
+            )
+        )
+
     def __init__(
         self,
         universe_provider: CurrentUniverseProvider,
@@ -247,6 +265,35 @@ class PortfolioFrontierService:
             maximum_consecutive_missing=self._maximum_consecutive_missing,
         )
 
+        return self.build_report(
+            asset_ids,
+            benchmark_id,
+            dates,
+            aligned,
+            excluded,
+            universe,
+            history,
+            constraints,
+            normalized,
+        )
+
+    def build_report(
+        self,
+        asset_ids: tuple[str, ...],
+        benchmark_id: str,
+        dates: tuple[date, ...],
+        aligned: dict[str, tuple[Decimal, ...]],
+        excluded: tuple[tuple[str, int], ...],
+        universe: UniverseSnapshot,
+        history: PriceHistory,
+        constraints: OptimizationConstraints,
+        normalized: Sequence[tuple[str, Decimal]] = (),
+    ) -> FrontierReport:
+        """Calculate alternatives from one validated snapshot, with optional real holdings."""
+        conventions = DEFAULT_FINANCIAL_CONVENTIONS
+        max_weight = constraints.max_weight
+        requested_start, requested_end = history.start, history.end
+
         def sample(ids: tuple[str, ...]) -> AlignedReturnSample:
             return AlignedReturnSample(
                 ids,
@@ -274,9 +321,6 @@ class PortfolioFrontierService:
             )
         except OptimizationSolverError as exc:
             raise optimization_failed(details=exc.details) from exc
-        values = tuple(quantity * aligned[asset][-1] for asset, quantity in normalized)
-        total = sum(values)
-        current = PortfolioWeights(asset_ids, tuple(float(value / total) for value in values))
         equal = PortfolioWeights(asset_ids, tuple(1 / len(asset_ids) for _ in asset_ids))
 
         def reference(
@@ -297,8 +341,7 @@ class PortfolioFrontierService:
                 else "valid",
             )
 
-        references = (
-            reference("current", current, signal, risk),
+        references: tuple[ReferencePortfolio, ...] = (
             reference("equal_weight", equal, signal, risk),
             reference(
                 "sp500_proxy",
@@ -307,6 +350,11 @@ class PortfolioFrontierService:
                 benchmark_risk,
             ),
         )
+        if normalized:
+            values = tuple(quantity * aligned[asset][-1] for asset, quantity in normalized)
+            total = sum(values)
+            current = PortfolioWeights(asset_ids, tuple(float(value / total) for value in values))
+            references = (reference("current", current, signal, risk), *references)
         assumptions = (
             "Returns are estimated annual arithmetic means, "
             "not observed CAGR or guaranteed future returns.",
@@ -317,10 +365,18 @@ class PortfolioFrontierService:
             "Profile fractions locate targets between minimum-variance return "
             "and maximum achievable return; "
             "they are relative preferences, not probabilities or absolute risk categories.",
-            "Only selected stocks are investable. "
-            "SPY is the S&P 500 total-return ETF proxy reference.",
+            (
+                "Only selected stocks are investable. "
+                if normalized
+                else "Only eligible S&P 500 stocks are investable. "
+            )
+            + "SPY is the S&P 500 total-return ETF proxy reference.",
             "Long-only, fully invested; no leverage, costs, taxes, or turnover constraint.",
-            "Current weights use end-date market values; equal weights cover selected stocks.",
+            (
+                "Current weights use end-date market values; equal weights cover selected stocks."
+                if normalized
+                else "Equal weights cover eligible stocks; no current holdings supplied."
+            ),
             "No missing-value imputation; timestamp-intersection alignment is used.",
             "Current S&P 500 membership is used; survivorship bias applies.",
         )

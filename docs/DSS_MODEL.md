@@ -205,3 +205,18 @@ Examples of explainable statements include:
 - changing the expected-return estimator materially changes the recommended allocation.
 
 The explanation engine must consume structured analysis facts rather than free-form hidden model reasoning.
+# Guided construction methodology (Week 6)
+
+The three-question `guided-preferences-v1` rule selects the least aggressive answer and identifies
+all determining questions. It feeds the existing versioned frontier profile configuration, not a
+new optimizer or a calibrated suitability score. All profiles share a 10% per-stock cap.
+
+Current S&P 500 constituent tickers are screened against every observed SPY session in the default
+three-calendar-year window. Require 253 benchmark prices and 90% eligible constituents; disclose
+all exclusions. No price is filled. The equal-weight reference covers the same eligible stocks;
+SPY and every alternative use the same daily observations and 252-period annualization.
+
+Capital only scales weights into illustrative USD amounts. Compute normalized decimal weight
+shares of total cents, floor each amount, then distribute residual cents by decreasing fractional
+remainder, breaking ties by ticker. The returned mathematical target weights remain unchanged.
+This is not integer-share allocation. See ADR 0010 for coverage and execution decisions.

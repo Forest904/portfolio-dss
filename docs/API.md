@@ -246,3 +246,34 @@ Errors should be machine-readable:
 ```
 
 Avoid returning numerical-library exceptions directly to clients.
+# Guided recommendations (Week 6)
+
+`POST /api/v1/guided-recommendations` returns HTTP 202 with `{ "id": "opaque-job-id" }`.
+
+```json
+{
+  "version": "guided-preferences-v1",
+  "answers": {
+    "trade_off": "moderate",
+    "fluctuations": "conservative",
+    "decline": "aggressive"
+  },
+  "capital": "10000.00"
+}
+```
+
+All three answers are required and accept `conservative`, `moderate`, or `aggressive`.
+Capital is positive USD with at most two decimal places. Invalid input returns 422 before a job
+is submitted. No ticker, quantity, risk coefficient, history window or cap is required.
+
+`GET /api/v1/guided-recommendations/{id}` returns `id`, `status`, `stage`, `report`, and `error`.
+Status is `queued`, `running`, `completed`, or `failed`; stages additionally distinguish
+`loading_universe`, `loading_prices`, `checking_coverage`, and `calculating_alternatives`.
+Failures contain a code, readable message and retryable flag. Unknown/expired jobs return 404.
+Retry by submitting a new job. Poll every two seconds; the GET request does not start work.
+
+Completed reports contain preference answers/version/rationale, capital/currency, dollar allocations
+for each profile, and a shared model containing the frontier report, coverage exclusions, source
+provenance and model hash. There is no current-portfolio reference in construction reports.
+Money serializes as decimal strings. Model and personalized report hashes have separate identities.
+The web proxies these endpoints under `/api/guided-recommendations` without response caching.

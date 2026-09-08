@@ -108,3 +108,34 @@ desktop/mobile visual verification remains pending; DOM interaction tests do not
 Store configuration with test fixtures and simulation seeds.
 
 Do not use live external market data in unit tests.
+# Week 6 validation
+
+`tests/test_week6.py` exhaustively covers all 27 preference combinations, invalid answers/version,
+invalid capital, deterministic cent rounding, capital-independent weights, complete-session
+coverage and the 90% boundary, missing SPY, model-cache reuse/invalidation, process-backed API
+completion, job sharing, restart recovery, expiration and forced timeout termination. Existing
+frontier tests continue to cover singular covariance, collapsed alternatives and solver invariants.
+
+The guided frontend tests cover the full journey, preserved input, recommendation selection,
+USD allocations, alternative exploration without refetching, retry, late-result suppression,
+two-second polling and stopping when inactive. Proxy tests verify forwarding and failures.
+
+Run `uv run python -m tests.week6_benchmark` from `apps/api` for a deterministic, network-free
+500-stock/756-price benchmark through the supervised background API. On the implementation
+Windows environment (2026-09-08), it completed in 421.8 seconds; calculation time was 415.6 seconds,
+peak worker memory 366,051,328 bytes (349 MiB). All 586 concurrent health checks succeeded;
+maximum health latency was 16 ms. These are local measurements, not service-level guarantees.
+
+For browser QA, run `uv run uvicorn tests.week6_demo:app --port 8016` from `apps/api` and set
+the web server's `API_BASE_URL=http://127.0.0.1:8016`. This explicitly synthetic server uses
+12 invented constituent tickers for construction and the Week 5 fixture for holdings; it never
+requests live prices. The checked-in guided JSON fixture was generated through the real service
+and API serialization. Production uses the ordinary application and live/cache providers.
+
+Desktop (1440x1000) and mobile (390x844) construction results were rendered with Playwright;
+screenshots are local artifacts in `output/playwright/`. Charts and wide comparison tables scroll
+within their cards on mobile. The in-app browser was unavailable, so standalone Chromium was used.
+
+Week 5 existing-holdings frontier was also inspected at both viewport sizes during Week 6.
+Final validation: 29 frontend tests, TypeScript, ESLint and production build passed. Backend
+pytest, Ruff and mypy include the guided data adapter concurrency/retry and worker-lease checks.

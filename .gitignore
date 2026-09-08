@@ -24,6 +24,8 @@ coverage/
 /data/*
 !/data/.gitkeep
 .cache/
+.playwright-cli/
+output/playwright/
 
 # Notebooks
 .ipynb_checkpoints/

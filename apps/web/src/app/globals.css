@@ -536,3 +536,10 @@ th {
 .result-views { display: flex; gap: 12px; flex-wrap: wrap; }
 .result-views [aria-pressed="true"] { background: #e7f0e9; border-color: #236449; }
 @media (max-width: 700px) { .profile-controls { grid-template-columns: 1fr; } }
+.guided-steps { display: flex; flex-wrap: wrap; gap: 16px; list-style: none; padding: 0; color: var(--muted); }
+.guided-steps [aria-current="step"] { color: #123d2c; font-weight: 700; border-bottom: 2px solid #236449; padding-bottom: 8px; }
+.guided-builder h3:focus { outline: none; }
+.guided-builder pre { overflow: auto; max-height: 320px; font-size: 12px; }
+.guided-builder .data-card { overflow-wrap: anywhere; }
+.allocation-scroll { max-height: 480px; overflow: auto; }
+.allocation-scroll thead { position: sticky; top: 0; background: #f5f8f5; }

@@ -91,12 +91,11 @@ Exit criteria:
 
 **Goal:** make trade-offs visible.
 
-**State:** implemented; automated interaction exit criterion verified. Desktop/mobile visual
-verification is pending because the implementation session had no available browser connection.
+**State:** complete; automated interaction and desktop/mobile visual checks verified.
 
 The frontier API and web workspace use configurable 20%/50%/80% return-range profiles, shared
 current/equal-weight/SPY estimates, and deterministic decision facts. See ADR 0009 and
-`docs/TESTING.md` for methodology and remaining visual checks.
+`docs/TESTING.md` for methodology and validation.
 
 Deliverables:
 
@@ -113,6 +112,10 @@ Exit criteria:
 ## Week 6 — Guided DSS flow
 
 **Goal:** make the system usable by a non-expert.
+
+**State:** complete. Guided construction, full-universe eligibility screening, background jobs,
+USD allocation, and desktop/mobile validation are implemented. The deterministic 500-stock
+background benchmark completed in 421.8 seconds; see ADR 0010 and `docs/TESTING.md`.
 
 Deliverables:
 

@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime, timedelta
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.frontier import router as frontier_router
+from app.api.guided import router as guided_router
 from app.api.router import router
 from app.application import (
     ApplicationError,
@@ -36,6 +39,11 @@ from app.infrastructure import (
     YahooFinanceMarketDataProvider,
 )
 from app.infrastructure.frontier import ScipyEfficientFrontierGenerator
+from app.infrastructure.guided_jobs import (
+    ProcessGuidedJobs,
+    ProductionGuidedFactory,
+    SQLiteGuidedRepository,
+)
 
 
 def create_app(
@@ -48,6 +56,7 @@ def create_app(
     portfolio_optimizer: PortfolioOptimizer | None = None,
     frontier_generator: EfficientFrontierGenerator | None = None,
     clock: Callable[[], datetime] | None = None,
+    guided_jobs: ProcessGuidedJobs | None = None,
 ) -> FastAPI:
     runtime = settings or load_settings()
     cache = SQLiteCache(runtime.cache_path)
@@ -65,7 +74,24 @@ def create_app(
         stale_fallback_limit=timedelta(days=runtime.stale_fallback_days),
         clock=clock,
     )
-    application = FastAPI(title=API_TITLE, description=API_DESCRIPTION, version=API_VERSION)
+    jobs = guided_jobs or ProcessGuidedJobs(
+        SQLiteGuidedRepository(runtime.cache_path.with_name("guided_jobs.sqlite3")),
+        ProductionGuidedFactory(runtime),
+        lambda: repr(runtime.frontier_profiles) + datetime.now(UTC).date().isoformat(),
+    )
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        jobs.start()
+        try:
+            yield
+        finally:
+            jobs.close()
+
+    application = FastAPI(
+        title=API_TITLE, description=API_DESCRIPTION, version=API_VERSION, lifespan=lifespan
+    )
+    application.state.guided_jobs = jobs
     application.state.universe_provider = universe
     application.state.valuation_service = PortfolioValuationService(
         universe,
@@ -115,12 +141,15 @@ def create_app(
             content={
                 "code": "REQUEST_VALIDATION_ERROR",
                 "message": "The request payload is invalid.",
-                "details": {"errors": exc.errors()},
+                "details": {
+                    "errors": jsonable_encoder(exc.errors(), custom_encoder={ValueError: str})
+                },
             },
         )
 
     application.include_router(router)
     application.include_router(frontier_router)
+    application.include_router(guided_router)
     return application
 
 

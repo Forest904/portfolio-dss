@@ -1,0 +1,2171 @@
+{
+  "id": "fixture-job",
+  "status": "completed",
+  "stage": "completed",
+  "report": {
+    "preference": {
+      "answers": {
+        "trade_off": "conservative",
+        "fluctuations": "moderate",
+        "decline": "aggressive"
+      },
+      "version": "guided-preferences-v1",
+      "suggested_profile": "conservative",
+      "determining_answers": [
+        "trade_off"
+      ],
+      "explanation": "Your return/stability trade-off determined the conservative suggestion. We use your lowest expressed tolerance for risk. This is a relative stocks-only preference, not a suitability assessment or a promise of capital protection."
+    },
+    "capital": "1000.01",
+    "currency": "USD",
+    "alternatives": [
+      {
+        "profile": "conservative",
+        "allocations": [
+          {
+            "asset_id": "S000",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S001",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S002",
+            "weight": 0.048952150308793616,
+            "amount": "48.95"
+          },
+          {
+            "asset_id": "S003",
+            "weight": 0.06923592365013395,
+            "amount": "69.24"
+          },
+          {
+            "asset_id": "S004",
+            "weight": 0.05836403202234216,
+            "amount": "58.36"
+          },
+          {
+            "asset_id": "S005",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S006",
+            "weight": 0.09808044352814366,
+            "amount": "98.08"
+          },
+          {
+            "asset_id": "S007",
+            "weight": 0.09074819162096785,
+            "amount": "90.75"
+          },
+          {
+            "asset_id": "S008",
+            "weight": 0.08374600059628663,
+            "amount": "83.75"
+          },
+          {
+            "asset_id": "S009",
+            "weight": 0.08066430599799673,
+            "amount": "80.67"
+          },
+          {
+            "asset_id": "S010",
+            "weight": 0.07020895227533537,
+            "amount": "70.21"
+          },
+          {
+            "asset_id": "S011",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          }
+        ]
+      },
+      {
+        "profile": "moderate",
+        "allocations": [
+          {
+            "asset_id": "S000",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S001",
+            "weight": 0.0982218238051047,
+            "amount": "98.22"
+          },
+          {
+            "asset_id": "S002",
+            "weight": 0.04801902733751854,
+            "amount": "48.02"
+          },
+          {
+            "asset_id": "S003",
+            "weight": 0.05948587794773816,
+            "amount": "59.49"
+          },
+          {
+            "asset_id": "S004",
+            "weight": 0.053650188648108436,
+            "amount": "53.65"
+          },
+          {
+            "asset_id": "S005",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S006",
+            "weight": 0.09238878813679742,
+            "amount": "92.39"
+          },
+          {
+            "asset_id": "S007",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S008",
+            "weight": 0.09961386999767012,
+            "amount": "99.62"
+          },
+          {
+            "asset_id": "S009",
+            "weight": 0.07869977206042959,
+            "amount": "78.7"
+          },
+          {
+            "asset_id": "S010",
+            "weight": 0.06992065206663296,
+            "amount": "69.92"
+          },
+          {
+            "asset_id": "S011",
+            "weight": 0.09999999999999998,
+            "amount": "100"
+          }
+        ]
+      },
+      {
+        "profile": "aggressive",
+        "allocations": [
+          {
+            "asset_id": "S000",
+            "weight": 0.10000000000000002,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S001",
+            "weight": 0.09019650012225479,
+            "amount": "90.2"
+          },
+          {
+            "asset_id": "S002",
+            "weight": 0.06594795399423864,
+            "amount": "65.95"
+          },
+          {
+            "asset_id": "S003",
+            "weight": 0.018764910512123107,
+            "amount": "18.76"
+          },
+          {
+            "asset_id": "S004",
+            "weight": 0.058108372850429885,
+            "amount": "58.11"
+          },
+          {
+            "asset_id": "S005",
+            "weight": 0.10000000000000002,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S006",
+            "weight": 0.08484589544545522,
+            "amount": "84.85"
+          },
+          {
+            "asset_id": "S007",
+            "weight": 0.10000000000000002,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S008",
+            "weight": 0.10000000000000002,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S009",
+            "weight": 0.08213636707549843,
+            "amount": "82.14"
+          },
+          {
+            "asset_id": "S010",
+            "weight": 0.09999999999999999,
+            "amount": "100"
+          },
+          {
+            "asset_id": "S011",
+            "weight": 0.10000000000000002,
+            "amount": "100"
+          }
+        ]
+      }
+    ],
+    "model": {
+      "report": {
+        "window": {
+          "requested_start": "2023-09-04",
+          "requested_end": "2026-09-04",
+          "effective_start": "2025-11-08",
+          "effective_end": "2026-09-03",
+          "aligned_price_observations": 300,
+          "return_observations": 299,
+          "excluded_observations": [
+            [
+              "S000",
+              0
+            ],
+            [
+              "S001",
+              0
+            ],
+            [
+              "S002",
+              0
+            ],
+            [
+              "S003",
+              0
+            ],
+            [
+              "S004",
+              0
+            ],
+            [
+              "S005",
+              0
+            ],
+            [
+              "S006",
+              0
+            ],
+            [
+              "S007",
+              0
+            ],
+            [
+              "S008",
+              0
+            ],
+            [
+              "S009",
+              0
+            ],
+            [
+              "S010",
+              0
+            ],
+            [
+              "S011",
+              0
+            ],
+            [
+              "SPY",
+              0
+            ]
+          ]
+        },
+        "frontier": {
+          "points": [
+            {
+              "id": "point-00",
+              "target_return": 0.2132619069419275,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000002,
+                  0.10000000000000002,
+                  0.0506140402203002,
+                  0.07564200013484504,
+                  0.06213055932322066,
+                  0.10000000000000002,
+                  0.10000000000000002,
+                  0.08151015265227504,
+                  0.07584066563672433,
+                  0.08240633713722338,
+                  0.07185624489541133,
+                  0.10000000000000002
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2132619069419275,
+                "variance": 0.010065230111976294,
+                "volatility": 0.10032562041660292
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.0506140402203002,
+                "max_weight_violation": 1.3877787807814457e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S006",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-01",
+              "target_return": 0.2151801811193993,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000002,
+                  0.10000000000000002,
+                  0.05013350135201174,
+                  0.07386728404948309,
+                  0.06109168793701485,
+                  0.10000000000000002,
+                  0.10000000000000002,
+                  0.0838255756454764,
+                  0.07783716643828599,
+                  0.08189941131669744,
+                  0.07134537326103056,
+                  0.10000000000000002
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2151801811193993,
+                "variance": 0.010065787252978653,
+                "volatility": 0.10032839704180793
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 7,
+                "budget_residual": 2.220446049250313e-16,
+                "minimum_weight": 0.05013350135201174,
+                "max_weight_violation": 1.3877787807814457e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S006",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-02",
+              "target_return": 0.21709845529687108,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.04965414013355541,
+                  0.07209263829054503,
+                  0.06005264275258075,
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.08614089197196624,
+                  0.07983356631857837,
+                  0.08139133415668652,
+                  0.07083478637608771,
+                  0.09999999999999998
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.21709845529687105,
+                "variance": 0.01006745865045975,
+                "volatility": 0.10033672632919488
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 7,
+                "budget_residual": 1.1102230246251565e-16,
+                "minimum_weight": 0.04965414013355541,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S006",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-03",
+              "target_return": 0.21901672947434286,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.04929727019778938,
+                  0.07064874779602849,
+                  0.05919948888517867,
+                  0.09999999999999998,
+                  0.099083681569883,
+                  0.0884451175055438,
+                  0.08179161600772474,
+                  0.08102116237523317,
+                  0.07051291566261879,
+                  0.09999999999999998
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2190167294743428,
+                "variance": 0.010070205861548154,
+                "volatility": 0.10035041535314218
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.04929727019778938,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-04",
+              "target_return": 0.22093500365181465,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.048952150308793616,
+                  0.06923592365013395,
+                  0.05836403202234216,
+                  0.09999999999999998,
+                  0.09808044352814366,
+                  0.09074819162096785,
+                  0.08374600059628663,
+                  0.08066430599799673,
+                  0.07020895227533537,
+                  0.09999999999999998
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.22093500365181457,
+                "variance": 0.010073975498471,
+                "volatility": 0.10036919596405562
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 1.1102230246251565e-16,
+                "minimum_weight": 0.048952150308793616,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-05",
+              "target_return": 0.22285327782928643,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.04860806516149865,
+                  0.06782319427855368,
+                  0.05752771653263332,
+                  0.09999999999999998,
+                  0.09707737965120418,
+                  0.09305168985742172,
+                  0.0856998489755127,
+                  0.0803072740912318,
+                  0.06990483145194393,
+                  0.09999999999999998
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2228532778292864,
+                "variance": 0.010078767214664011,
+                "volatility": 0.1003930635784366
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 1.1102230246251565e-16,
+                "minimum_weight": 0.04860806516149865,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-06",
+              "target_return": 0.22477155200675822,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000003,
+                  0.10000000000000003,
+                  0.048263149640827445,
+                  0.06641038542829299,
+                  0.0566920948270651,
+                  0.10000000000000003,
+                  0.0960741813790479,
+                  0.09535484181108445,
+                  0.08765413562502646,
+                  0.07995037896603044,
+                  0.0696008323226252,
+                  0.10000000000000003
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.22477155200675833,
+                "variance": 0.01008458101026276,
+                "volatility": 0.10042201456982806
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.048263149640827445,
+                "max_weight_violation": 2.7755575615628914e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-07",
+              "target_return": 0.22668982618423,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.1,
+                  0.09999999999999999,
+                  0.04791823416020046,
+                  0.0649975765700254,
+                  0.05585647311229493,
+                  0.1,
+                  0.09507098310366978,
+                  0.09765799374084422,
+                  0.08960842229603799,
+                  0.07959348382936622,
+                  0.06929683318756096,
+                  0.1
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.22668982618423,
+                "variance": 0.01009141688521127,
+                "volatility": 0.10045604454293067
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.04791823416020046,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-08",
+              "target_return": 0.2286081003617018,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.04757308962490916,
+                  0.06358465216869301,
+                  0.055021871456100886,
+                  0.09999999999999998,
+                  0.0940674591093912,
+                  0.09996108455136175,
+                  0.0915629118123354,
+                  0.0792366007364564,
+                  0.06899233054075211,
+                  0.09999999999999996
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2286081003617018,
+                "variance": 0.010099274839563315,
+                "volatility": 0.10049514833843132
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 2.220446049250313e-16,
+                "minimum_weight": 0.04757308962490916,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S005",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-09",
+              "target_return": 0.23052637453917357,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.1,
+                  0.09936825745052019,
+                  0.04776591432664397,
+                  0.0614931285147769,
+                  0.05427885349112782,
+                  0.1,
+                  0.09316759517953385,
+                  0.1,
+                  0.0955757978252113,
+                  0.0789267513027604,
+                  0.06942370190942558,
+                  0.1
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.23052637453917357,
+                "variance": 0.010108529550766734,
+                "volatility": 0.1005411833567058
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.04776591432664397,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-10",
+              "target_return": 0.23244464871664539,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.0982218238051047,
+                  0.04801902733751854,
+                  0.05948587794773816,
+                  0.053650188648108436,
+                  0.09999999999999998,
+                  0.09238878813679742,
+                  0.09999999999999998,
+                  0.09961386999767012,
+                  0.07869977206042959,
+                  0.06992065206663296,
+                  0.09999999999999998
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.23244464871664533,
+                "variance": 0.010119516843763254,
+                "volatility": 0.10059580927535329
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 1.1102230246251565e-16,
+                "minimum_weight": 0.04801902733751854,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-11",
+              "target_return": 0.23436292289411717,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.0968316689561295,
+                  0.050482951122023764,
+                  0.053386018065174706,
+                  0.054135996900555865,
+                  0.09999999999999998,
+                  0.09108206122692984,
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.07909434135681309,
+                  0.07498696237237332,
+                  0.09999999999999996
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.23436292289411714,
+                "variance": 0.010134071646738357,
+                "volatility": 0.10066812627012761
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.050482951122023764,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-12",
+              "target_return": 0.23628119707158896,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000002,
+                  0.09541584707873496,
+                  0.053179730727547884,
+                  0.04685423220199602,
+                  0.05473999813332357,
+                  0.10000000000000002,
+                  0.08971862838044971,
+                  0.10000000000000002,
+                  0.10000000000000002,
+                  0.07955414747982342,
+                  0.08053741599812453,
+                  0.1
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.23628119707158904,
+                "variance": 0.010154841624840726,
+                "volatility": 0.10077123411391133
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 2.220446049250313e-16,
+                "minimum_weight": 0.04685423220199602,
+                "max_weight_violation": 1.3877787807814457e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-13",
+              "target_return": 0.23819947124906074,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.1,
+                  0.09400024397152534,
+                  0.055876989974692044,
+                  0.04032225429192448,
+                  0.05534387819837503,
+                  0.1,
+                  0.08835524363130079,
+                  0.1,
+                  0.1,
+                  0.08001386549139017,
+                  0.08608752444079223,
+                  0.09999999999999998
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2381994712490608,
+                "variance": 0.010181847432815994,
+                "volatility": 0.10090514076505713
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.04032225429192448,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-14",
+              "target_return": 0.24011774542653253,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.0925845168064452,
+                  0.05857414962727119,
+                  0.033790171952628366,
+                  0.055948055493980624,
+                  0.09999999999999998,
+                  0.08699190781335939,
+                  0.09999999999999998,
+                  0.09999999999999998,
+                  0.0804736546050044,
+                  0.09163754370131093,
+                  0.09999999999999996
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.24011774542653247,
+                "variance": 0.010215089070649878,
+                "volatility": 0.10106972380812108
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.033790171952628366,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-15",
+              "target_return": 0.2420360196040043,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000002,
+                  0.09116879211018201,
+                  0.061271303255081885,
+                  0.02725808686619492,
+                  0.05655233636319054,
+                  0.10000000000000002,
+                  0.08562842001888758,
+                  0.1,
+                  0.10000000000000002,
+                  0.08093354697453999,
+                  0.09718751441192303,
+                  0.10000000000000002
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.2420360196040044,
+                "variance": 0.010254566538337097,
+                "volatility": 0.1012648336706139
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.02725808686619492,
+                "max_weight_violation": 1.3877787807814457e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-16",
+              "target_return": 0.2439542937814761,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000002,
+                  0.09019650012225479,
+                  0.06594795399423864,
+                  0.018764910512123107,
+                  0.058108372850429885,
+                  0.10000000000000002,
+                  0.08484589544545522,
+                  0.10000000000000002,
+                  0.10000000000000002,
+                  0.08213636707549843,
+                  0.09999999999999999,
+                  0.10000000000000002
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.24395429378147615,
+                "variance": 0.010300912821115291,
+                "volatility": 0.1014934126981416
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 9,
+                "budget_residual": 2.220446049250313e-16,
+                "minimum_weight": 0.018764910512123107,
+                "max_weight_violation": 1.3877787807814457e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S010",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-17",
+              "target_return": 0.24587256795894788,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999998,
+                  0.08968046079785867,
+                  0.07265923014342487,
+                  0.008257219235202872,
+                  0.06064144479779395,
+                  0.1,
+                  0.08465979832393179,
+                  0.1,
+                  0.1,
+                  0.08410184670178787,
+                  0.1,
+                  0.09999999999999996
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.24587256795894794,
+                "variance": 0.01035802948070443,
+                "volatility": 0.10177440484082641
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.008257219235202872,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S010",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-18",
+              "target_return": 0.24779084213641966,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.09999999999999999,
+                  0.08747009892842965,
+                  0.08280313456440754,
+                  6.15284122589765e-18,
+                  0.06259902003681089,
+                  0.1,
+                  0.08160261068291132,
+                  0.09999999999999999,
+                  0.1,
+                  0.08552513578744073,
+                  0.1,
+                  0.09999999999999999
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.24779084213641966,
+                "variance": 0.01042761590432475,
+                "volatility": 0.10211569861840417
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 8,
+                "budget_residual": 2.220446049250313e-16,
+                "minimum_weight": 6.15284122589765e-18,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S010",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-19",
+              "target_return": 0.24970911631389145,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.10000000000000002,
+                  0.07709783668594569,
+                  0.09999999999999999,
+                  0.0,
+                  0.06889843948790524,
+                  0.10000000000000002,
+                  0.06255817095916938,
+                  0.10000000000000002,
+                  0.09999999999999999,
+                  0.0914455528669798,
+                  0.09999999999999998,
+                  0.10000000000000002
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.24970911631389153,
+                "variance": 0.010544701849028774,
+                "volatility": 0.10268739868663912
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 7,
+                "budget_residual": 2.220446049250313e-16,
+                "minimum_weight": 0.0,
+                "max_weight_violation": 1.3877787807814457e-17,
+                "binding_asset_ids": [
+                  "S000",
+                  "S002",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S010",
+                  "S011"
+                ]
+              }
+            },
+            {
+              "id": "point-20",
+              "target_return": 0.25162739049136323,
+              "weights": {
+                "asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S003",
+                  "S004",
+                  "S005",
+                  "S006",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ],
+                "weights": [
+                  0.1,
+                  0.1,
+                  0.1,
+                  0.0,
+                  0.1,
+                  0.1,
+                  0.0,
+                  0.1,
+                  0.1,
+                  0.1,
+                  0.1,
+                  0.1
+                ]
+              },
+              "metrics": {
+                "expected_return": 0.25162739049136323,
+                "variance": 0.010927965040502202,
+                "volatility": 0.10453690755184124
+              },
+              "solver": {
+                "solver_name": "scipy_slsqp",
+                "success": true,
+                "status_code": 0,
+                "message": "Optimization terminated successfully",
+                "iterations": 1,
+                "budget_residual": 0.0,
+                "minimum_weight": 0.0,
+                "max_weight_violation": 0.0,
+                "binding_asset_ids": [
+                  "S000",
+                  "S001",
+                  "S002",
+                  "S004",
+                  "S005",
+                  "S007",
+                  "S008",
+                  "S009",
+                  "S010",
+                  "S011"
+                ]
+              }
+            }
+          ],
+          "profiles": [
+            {
+              "name": "conservative",
+              "fraction": 0.2,
+              "target_return": 0.22093500365181465,
+              "point_id": "point-04"
+            },
+            {
+              "name": "moderate",
+              "fraction": 0.5,
+              "target_return": 0.23244464871664539,
+              "point_id": "point-10"
+            },
+            {
+              "name": "aggressive",
+              "fraction": 0.8,
+              "target_return": 0.2439542937814761,
+              "point_id": "point-16"
+            }
+          ],
+          "diagnostics": []
+        },
+        "references": [
+          {
+            "id": "equal_weight",
+            "weights": {
+              "asset_ids": [
+                "S000",
+                "S001",
+                "S002",
+                "S003",
+                "S004",
+                "S005",
+                "S006",
+                "S007",
+                "S008",
+                "S009",
+                "S010",
+                "S011"
+              ],
+              "weights": [
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333,
+                0.08333333333333333
+              ]
+            },
+            "metrics": {
+              "expected_return": 0.21393703804382502,
+              "variance": 0.010216669973890985,
+              "volatility": 0.10107754436021378
+            },
+            "constraint_status": "valid"
+          },
+          {
+            "id": "sp500_proxy",
+            "weights": {
+              "asset_ids": [
+                "SPY"
+              ],
+              "weights": [
+                1.0
+              ]
+            },
+            "metrics": {
+              "expected_return": 0.21653796597302294,
+              "variance": 0.038388670040587006,
+              "volatility": 0.19593026831142504
+            },
+            "constraint_status": "outside_investable_universe"
+          }
+        ],
+        "facts": [
+          {
+            "id": "conservative.equal_weight.expected_return_change",
+            "profile": "conservative",
+            "kind": "expected_return_change",
+            "subject": "point-04",
+            "comparison": "equal_weight",
+            "value": 0.6997965607989542,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "conservative.equal_weight.volatility_change",
+            "profile": "conservative",
+            "kind": "volatility_change",
+            "subject": "point-04",
+            "comparison": "equal_weight",
+            "value": -0.07083483961581594,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "conservative.sp500_proxy.expected_return_change",
+            "profile": "conservative",
+            "kind": "expected_return_change",
+            "subject": "point-04",
+            "comparison": "sp500_proxy",
+            "value": 0.43970376787916265,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "conservative.sp500_proxy.volatility_change",
+            "profile": "conservative",
+            "kind": "volatility_change",
+            "subject": "point-04",
+            "comparison": "sp500_proxy",
+            "value": -9.556107234736942,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "conservative.largest_holding",
+            "profile": "conservative",
+            "kind": "largest_holding",
+            "subject": "S000",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "conservative.concentration",
+            "profile": "conservative",
+            "kind": "concentration",
+            "subject": "point-04",
+            "comparison": null,
+            "value": 0.08690071392021215,
+            "unit": "hhi"
+          },
+          {
+            "id": "conservative.S000.binding_cap",
+            "profile": "conservative",
+            "kind": "binding_cap",
+            "subject": "S000",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "conservative.S001.binding_cap",
+            "profile": "conservative",
+            "kind": "binding_cap",
+            "subject": "S001",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "conservative.S005.binding_cap",
+            "profile": "conservative",
+            "kind": "binding_cap",
+            "subject": "S005",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "conservative.S011.binding_cap",
+            "profile": "conservative",
+            "kind": "binding_cap",
+            "subject": "S011",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "moderate.equal_weight.expected_return_change",
+            "profile": "moderate",
+            "kind": "expected_return_change",
+            "subject": "point-10",
+            "comparison": "equal_weight",
+            "value": 1.8507610672820307,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "moderate.equal_weight.volatility_change",
+            "profile": "moderate",
+            "kind": "volatility_change",
+            "subject": "point-10",
+            "comparison": "equal_weight",
+            "value": -0.048173508486049066,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "moderate.sp500_proxy.expected_return_change",
+            "profile": "moderate",
+            "kind": "expected_return_change",
+            "subject": "point-10",
+            "comparison": "sp500_proxy",
+            "value": 1.5906682743622391,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "moderate.sp500_proxy.volatility_change",
+            "profile": "moderate",
+            "kind": "volatility_change",
+            "subject": "point-10",
+            "comparison": "sp500_proxy",
+            "value": -9.533445903607175,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "moderate.largest_holding",
+            "profile": "moderate",
+            "kind": "largest_holding",
+            "subject": "S000",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "moderate.concentration",
+            "profile": "moderate",
+            "kind": "concentration",
+            "subject": "point-10",
+            "comparison": null,
+            "value": 0.08791142905231868,
+            "unit": "hhi"
+          },
+          {
+            "id": "moderate.S000.binding_cap",
+            "profile": "moderate",
+            "kind": "binding_cap",
+            "subject": "S000",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "moderate.S005.binding_cap",
+            "profile": "moderate",
+            "kind": "binding_cap",
+            "subject": "S005",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "moderate.S007.binding_cap",
+            "profile": "moderate",
+            "kind": "binding_cap",
+            "subject": "S007",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "moderate.S011.binding_cap",
+            "profile": "moderate",
+            "kind": "binding_cap",
+            "subject": "S011",
+            "comparison": null,
+            "value": 0.09999999999999998,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.equal_weight.expected_return_change",
+            "profile": "aggressive",
+            "kind": "expected_return_change",
+            "subject": "point-16",
+            "comparison": "equal_weight",
+            "value": 3.0017255737651127,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "aggressive.equal_weight.volatility_change",
+            "profile": "aggressive",
+            "kind": "volatility_change",
+            "subject": "point-16",
+            "comparison": "equal_weight",
+            "value": 0.04158683379278244,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "aggressive.sp500_proxy.expected_return_change",
+            "profile": "aggressive",
+            "kind": "expected_return_change",
+            "subject": "point-16",
+            "comparison": "sp500_proxy",
+            "value": 2.741632780845321,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "aggressive.sp500_proxy.volatility_change",
+            "profile": "aggressive",
+            "kind": "volatility_change",
+            "subject": "point-16",
+            "comparison": "sp500_proxy",
+            "value": -9.443685561328344,
+            "unit": "percentage_points"
+          },
+          {
+            "id": "aggressive.largest_holding",
+            "profile": "aggressive",
+            "kind": "largest_holding",
+            "subject": "S000",
+            "comparison": null,
+            "value": 0.10000000000000002,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.concentration",
+            "profile": "aggressive",
+            "kind": "concentration",
+            "subject": "point-16",
+            "comparison": null,
+            "value": 0.09015845490248485,
+            "unit": "hhi"
+          },
+          {
+            "id": "aggressive.S000.binding_cap",
+            "profile": "aggressive",
+            "kind": "binding_cap",
+            "subject": "S000",
+            "comparison": null,
+            "value": 0.10000000000000002,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.S005.binding_cap",
+            "profile": "aggressive",
+            "kind": "binding_cap",
+            "subject": "S005",
+            "comparison": null,
+            "value": 0.10000000000000002,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.S007.binding_cap",
+            "profile": "aggressive",
+            "kind": "binding_cap",
+            "subject": "S007",
+            "comparison": null,
+            "value": 0.10000000000000002,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.S008.binding_cap",
+            "profile": "aggressive",
+            "kind": "binding_cap",
+            "subject": "S008",
+            "comparison": null,
+            "value": 0.10000000000000002,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.S010.binding_cap",
+            "profile": "aggressive",
+            "kind": "binding_cap",
+            "subject": "S010",
+            "comparison": null,
+            "value": 0.09999999999999999,
+            "unit": "weight_fraction"
+          },
+          {
+            "id": "aggressive.S011.binding_cap",
+            "profile": "aggressive",
+            "kind": "binding_cap",
+            "subject": "S011",
+            "comparison": null,
+            "value": 0.10000000000000002,
+            "unit": "weight_fraction"
+          }
+        ],
+        "expected_return_model": {
+          "asset_ids": [
+            "S000",
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S010",
+            "S011"
+          ],
+          "expected_returns": [
+            0.438939307593826,
+            0.09349051848607573,
+            0.17026256539357934,
+            -0.028349372907571564,
+            0.11883750054489783,
+            0.1597124325310555,
+            0.07931992451983974,
+            0.5575284598600874,
+            0.48673518920362113,
+            0.12195022341519718,
+            0.24981802920192075,
+            0.11899967868337136
+          ],
+          "frequency": "daily",
+          "return_convention": "simple",
+          "annualization_periods": 252,
+          "estimation_start": "2025-11-09",
+          "estimation_end": "2026-09-03",
+          "observations": 299,
+          "estimator_name": "historical_arithmetic_mean",
+          "diagnostics": []
+        },
+        "risk_model": {
+          "asset_ids": [
+            "S000",
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S010",
+            "S011"
+          ],
+          "covariance_matrix": [
+            [
+              0.03685647168239469,
+              0.005020039397694075,
+              0.009934859364428068,
+              0.0071418881106891565,
+              0.006680776927549787,
+              0.005985543075099645,
+              0.008429009387740426,
+              0.006855676580425162,
+              0.005907630906336219,
+              0.005464534470634196,
+              0.008678269357622684,
+              0.008982406706189671
+            ],
+            [
+              0.005020039397694075,
+              0.042459997852950904,
+              0.007274760033592389,
+              0.005484747717827009,
+              0.009111661135980607,
+              0.004182699581674994,
+              0.006858987573809567,
+              0.0044592396471875686,
+              0.009456647617139968,
+              0.00772249321497402,
+              0.0069225526950041725,
+              0.004986022630494717
+            ],
+            [
+              0.009934859364428068,
+              0.007274760033592389,
+              0.04292301521849336,
+              0.009419826521229444,
+              0.01055147077371839,
+              0.01035382213023403,
+              0.005092159628459864,
+              0.010054708948588753,
+              0.00787745409835162,
+              0.012242220036643065,
+              0.006773512248411438,
+              0.004756255144120049
+            ],
+            [
+              0.0071418881106891565,
+              0.005484747717827009,
+              0.009419826521229444,
+              0.04378131021546935,
+              0.010091983487436375,
+              0.008653460195733476,
+              0.0076805223163142035,
+              0.006091852544100202,
+              0.0048688176511730245,
+              0.009436228227222515,
+              0.005792099021066096,
+              0.008231700371606759
+            ],
+            [
+              0.006680776927549787,
+              0.009111661135980607,
+              0.01055147077371839,
+              0.010091983487436375,
+              0.04264182543621963,
+              0.005103119758488045,
+              0.005241488949931126,
+              0.00873851768565785,
+              0.0099462697003417,
+              0.007496058889705697,
+              0.005639622681821826,
+              0.011442811851698164
+            ],
+            [
+              0.005985543075099645,
+              0.004182699581674994,
+              0.01035382213023403,
+              0.008653460195733476,
+              0.005103119758488045,
+              0.04146919995550431,
+              0.009189145813934844,
+              0.006819162511816565,
+              0.006183806694411582,
+              0.006405818954692568,
+              0.006976416985017243,
+              0.002274328761738766
+            ],
+            [
+              0.008429009387740426,
+              0.006858987573809567,
+              0.005092159628459864,
+              0.0076805223163142035,
+              0.005241488949931126,
+              0.009189145813934844,
+              0.040797583672359486,
+              0.007739780755106201,
+              0.004816410152278986,
+              0.004273508084754454,
+              0.006380211591035134,
+              0.005998711049677668
+            ],
+            [
+              0.006855676580425162,
+              0.0044592396471875686,
+              0.010054708948588753,
+              0.006091852544100202,
+              0.00873851768565785,
+              0.006819162511816565,
+              0.007739780755106201,
+              0.04728820142996075,
+              0.008556644834413662,
+              0.005121256655325684,
+              0.011212798892848886,
+              0.0036317531074697156
+            ],
+            [
+              0.005907630906336219,
+              0.009456647617139968,
+              0.00787745409835162,
+              0.0048688176511730245,
+              0.0099462697003417,
+              0.006183806694411582,
+              0.004816410152278986,
+              0.008556644834413662,
+              0.042530217381061934,
+              0.006166034020676662,
+              0.011473479488090582,
+              0.009174005816948057
+            ],
+            [
+              0.005464534470634196,
+              0.00772249321497402,
+              0.012242220036643065,
+              0.009436228227222515,
+              0.007496058889705697,
+              0.006405818954692568,
+              0.004273508084754454,
+              0.005121256655325684,
+              0.006166034020676662,
+              0.047771237781108124,
+              0.004854608555489911,
+              0.008380129093721005
+            ],
+            [
+              0.008678269357622684,
+              0.0069225526950041725,
+              0.006773512248411438,
+              0.005792099021066096,
+              0.005639622681821826,
+              0.006976416985017243,
+              0.006380211591035134,
+              0.011212798892848886,
+              0.011473479488090582,
+              0.004854608555489911,
+              0.0447421404803638,
+              0.007680858816908632
+            ],
+            [
+              0.008982406706189671,
+              0.004986022630494717,
+              0.004756255144120049,
+              0.008231700371606759,
+              0.011442811851698164,
+              0.002274328761738766,
+              0.005998711049677668,
+              0.0036317531074697156,
+              0.009174005816948057,
+              0.008380129093721005,
+              0.007680858816908632,
+              0.03708867587340645
+            ]
+          ],
+          "frequency": "daily",
+          "return_convention": "simple",
+          "annualization_periods": 252,
+          "estimation_start": "2025-11-09",
+          "estimation_end": "2026-09-03",
+          "observations": 299,
+          "missing_data_policy": "no_imputation",
+          "estimator_name": "historical_sample_covariance",
+          "diagnostics": []
+        },
+        "benchmark_expected_return_model": {
+          "asset_ids": [
+            "SPY"
+          ],
+          "expected_returns": [
+            0.21653796597302294
+          ],
+          "frequency": "daily",
+          "return_convention": "simple",
+          "annualization_periods": 252,
+          "estimation_start": "2025-11-09",
+          "estimation_end": "2026-09-03",
+          "observations": 299,
+          "estimator_name": "historical_arithmetic_mean",
+          "diagnostics": []
+        },
+        "benchmark_risk_model": {
+          "asset_ids": [
+            "SPY"
+          ],
+          "covariance_matrix": [
+            [
+              0.038388670040587006
+            ]
+          ],
+          "frequency": "daily",
+          "return_convention": "simple",
+          "annualization_periods": 252,
+          "estimation_start": "2025-11-09",
+          "estimation_end": "2026-09-03",
+          "observations": 299,
+          "missing_data_policy": "no_imputation",
+          "estimator_name": "historical_sample_covariance",
+          "diagnostics": []
+        },
+        "constraints": {
+          "max_weight": 0.1
+        },
+        "profile_configuration": {
+          "fractions": [
+            0.2,
+            0.5,
+            0.8
+          ],
+          "version": "frontier-return-fractions-v1"
+        },
+        "conventions": {
+          "base_currency": "USD",
+          "price_field": "adjusted_close",
+          "return_convention": "simple",
+          "return_frequency": "daily",
+          "annualization_periods": 252,
+          "missing_data_policy": "no_imputation",
+          "alignment_policy": "timestamp_intersection"
+        },
+        "universe_as_of": "2026-09-04",
+        "universe_provenance": {
+          "provider": "fixture",
+          "retrieved_at": "2026-09-04T21:00:00Z",
+          "content_hash": "universe-hash",
+          "stale_fallback": false
+        },
+        "price_provenance": {
+          "provider": "bulk_yahoo_finance",
+          "retrieved_at": "2026-09-04T21:00:00Z",
+          "content_hash": "d618acd4674897e2890b46782587f0d17855da2cff05e8aa8c2ef65cc17c4e69",
+          "stale_fallback": false
+        },
+        "assumptions": [
+          "Returns are estimated annual arithmetic means, not observed CAGR or guaranteed future returns.",
+          "Volatility is estimated from historical sample covariance, annualized using 252 trading periods.",
+          "All alternatives and references share the same adjusted-close daily simple-return observations.",
+          "Profile fractions locate targets between minimum-variance return and maximum achievable return; they are relative preferences, not probabilities or absolute risk categories.",
+          "Only eligible S&P 500 stocks are investable. SPY is the S&P 500 total-return ETF proxy reference.",
+          "Long-only, fully invested; no leverage, costs, taxes, or turnover constraint.",
+          "Equal weights cover eligible stocks; no current holdings supplied.",
+          "Current S&P 500 membership is used; survivorship bias applies.",
+          "Every eligible stock has USD adjusted-close prices on every observed SPY session; excluded constituents are listed and missing prices are never filled.",
+          "The three-year history window estimates parameters; it is not an investment horizon.",
+          "Conservative is relative within a stocks-only model, not capital protection.",
+          "Capital scales illustrative USD amounts, not optimized weights; no share purchases are calculated. Cent rounding does not change model weights."
+        ],
+        "diagnostics": [],
+        "report_hash": "bbfbaa3334a8a1caa8d33cad67dbd631ecc715f47005cac27cb155854fff0347"
+      },
+      "coverage": {
+        "total": 12,
+        "eligible": 12,
+        "excluded": [],
+        "policy": "complete-spy-sessions-v1",
+        "minimum_fraction": 0.9
+      },
+      "price_sources": [
+        {
+          "provider": "fixture",
+          "retrieved_at": "2026-09-04T21:00:00Z",
+          "content_hash": "29577fdd7220a86351ae2c047655177b056532a33127942dfaf05a010cc05df6",
+          "stale_fallback": false
+        }
+      ],
+      "model_hash": "0b97abdb1530dc7e5ab71f6298026606326ccdbebf20a461822cfa92b0820383"
+    },
+    "report_hash": "0e38dd7739398e493987ace8bf0a363a9c4bd962ed3887c1b529de2f9c36df92"
+  },
+  "error": null
+}

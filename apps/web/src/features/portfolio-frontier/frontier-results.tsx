@@ -24,11 +24,17 @@ function factText(fact: DecisionFact): string {
   }
 }
 
-export function FrontierResults({ report }: { report: FrontierReport }) {
-  const [selected, setSelected] = useState<ProfileName>("moderate");
+export function FrontierResults({ report, suggestedProfile, alternatives }: {
+  report: FrontierReport;
+  suggestedProfile?: ProfileName;
+  alternatives?: { profile: ProfileName; allocations: { asset_id: string; weight: number; amount: string }[] }[];
+}) {
+  const [selected, setSelected] = useState<ProfileName>(suggestedProfile ?? "moderate");
+  const dollars = alternatives?.find((item) => item.profile === selected)?.allocations;
+  const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
   const profile = report.frontier.profiles.find((item) => item.name === selected)!;
   const point = report.frontier.points.find((item) => item.id === profile.point_id)!;
-  const current = report.references.find((item) => item.id === "current")!;
+  const current = report.references.find((item) => item.id === "current");
   const values = [...report.frontier.points, ...report.references].map((item) => item.metrics);
   const width = 800, height = 380, left = 85, right = 30, top = 28, bottom = 72;
   const minX = Math.min(...values.map((item) => item.volatility));
@@ -45,7 +51,8 @@ export function FrontierResults({ report }: { report: FrontierReport }) {
   return <section className="analysis-results frontier-results" aria-labelledby="frontier-title">
     <div className="result-heading"><div><p className="eyebrow">Decision alternatives</p><h2 id="frontier-title">Explore the trade-off</h2></div>
       <p>{report.window.effective_start} – {report.window.effective_end}<br />{report.window.return_observations} shared daily returns</p></div>
-    <p className="supporting-copy">These are historical model estimates, not guaranteed future outcomes. Profiles describe relative choices among your selected stocks.</p>
+    <p className="supporting-copy">These are historical model estimates, not guaranteed future outcomes. Profiles describe relative choices among {suggestedProfile ? "eligible S&P 500 stocks" : "your selected stocks"}.</p>
+    {suggestedProfile && <p className="data-card">Questionnaire suggestion: <strong>{labels[suggestedProfile]}</strong>. {selected === suggestedProfile ? "Showing your suggested allocation." : `Exploring the ${labels[selected]} alternative; your questionnaire suggestion is unchanged.`}</p>}
     <fieldset className="profile-controls"><legend>Risk preference</legend>
       {report.frontier.profiles.map((item) => <label key={item.name} className={selected === item.name ? "profile-option selected" : "profile-option"}>
         <input type="radio" name="risk-profile" value={item.name} checked={selected === item.name} onChange={() => setSelected(item.name)} />
@@ -87,9 +94,10 @@ export function FrontierResults({ report }: { report: FrontierReport }) {
       <article className="metric"><span>Estimated annual arithmetic return</span><strong>{percent.format(point.metrics.expected_return)}</strong></article>
       <article className="metric"><span>Estimated annual volatility</span><strong>{percent.format(point.metrics.volatility)}</strong></article>
     </div>
-    <section className="data-card"><h3>Allocation: current vs {labels[selected]}</h3><p className="fine-print">Target portfolio weights; changes are percentage points.</p>
-      <div className="table-scroll"><table aria-label="Allocation comparison"><thead><tr><th>Asset</th><th>Current weight</th><th>{labels[selected]} weight</th><th>Change (pp)</th></tr></thead><tbody>
-        {point.weights.asset_ids.map((asset, index) => <tr key={asset}><th>{asset}</th><td>{percent.format(current.weights.weights[index])}</td><td>{percent.format(point.weights.weights[index])}</td><td>{signed.format(100 * (point.weights.weights[index] - current.weights.weights[index]))}</td></tr>)}
+    <section className="data-card"><h3>{current ? `Allocation: current vs ${labels[selected]}` : `Target allocation: ${labels[selected]}`}</h3>
+      <p className="fine-print">{current ? "Target portfolio weights; changes are percentage points." : "Illustrative USD allocation of your capital, not share purchases. Cent rounding does not change target weights."}</p>
+      <div className="table-scroll allocation-scroll"><table aria-label="Allocation comparison"><thead><tr><th>Asset</th>{current && <th>Current weight</th>}<th>{labels[selected]} weight</th>{current && <th>Change (pp)</th>}{dollars && <th>Amount (USD)</th>}</tr></thead><tbody>
+        {point.weights.asset_ids.map((asset, index) => <tr key={asset}><th>{asset}</th>{current && <td>{percent.format(current.weights.weights[index])}</td>}<td>{percent.format(point.weights.weights[index])}</td>{current && <td>{signed.format(100 * (point.weights.weights[index] - current.weights.weights[index]))}</td>}{dollars && <td>{usd.format(Number(dollars[index].amount))}</td>}</tr>)}
       </tbody></table></div>
     </section>
     <section className="data-card"><h3>Comparable annual estimates</h3><div className="table-scroll"><table aria-label="Risk and return comparison"><thead><tr><th>Portfolio</th><th>Estimated return</th><th>Estimated volatility</th><th>Constraints</th></tr></thead><tbody>
