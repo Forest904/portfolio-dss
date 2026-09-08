@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.api.frontier import router as frontier_router
 from app.api.router import router
 from app.application import (
     ApplicationError,
@@ -16,6 +17,7 @@ from app.application import (
     PortfolioOptimizationService,
     PortfolioValuationService,
 )
+from app.application.frontier import PortfolioFrontierService
 from app.core.config import API_DESCRIPTION, API_TITLE, API_VERSION, Settings, load_settings
 from app.domain import (
     CurrentUniverseProvider,
@@ -26,12 +28,14 @@ from app.domain import (
     PortfolioOptimizer,
     RiskEstimator,
 )
+from app.domain.frontier import EfficientFrontierGenerator
 from app.infrastructure import (
     ScipyMeanVarianceOptimizer,
     SQLiteCache,
     WikipediaSP500Provider,
     YahooFinanceMarketDataProvider,
 )
+from app.infrastructure.frontier import ScipyEfficientFrontierGenerator
 
 
 def create_app(
@@ -42,6 +46,7 @@ def create_app(
     expected_return_estimator: ExpectedReturnEstimator | None = None,
     risk_estimator: RiskEstimator | None = None,
     portfolio_optimizer: PortfolioOptimizer | None = None,
+    frontier_generator: EfficientFrontierGenerator | None = None,
     clock: Callable[[], datetime] | None = None,
 ) -> FastAPI:
     runtime = settings or load_settings()
@@ -85,6 +90,17 @@ def create_app(
         maximum_consecutive_missing=runtime.maximum_consecutive_missing,
     )
 
+    application.state.frontier_service = PortfolioFrontierService(
+        universe,
+        prices,
+        expected_return_estimator or HistoricalMeanEstimator(),
+        risk_estimator or HistoricalSampleRiskEstimator(),
+        frontier_generator or ScipyEfficientFrontierGenerator(),
+        profiles=runtime.frontier_profiles,
+        clock=clock,
+        maximum_consecutive_missing=runtime.maximum_consecutive_missing,
+    )
+
     @application.exception_handler(ApplicationError)
     async def handle_application_error(_: Request, exc: ApplicationError) -> JSONResponse:
         return JSONResponse(
@@ -104,6 +120,7 @@ def create_app(
         )
 
     application.include_router(router)
+    application.include_router(frontier_router)
     return application
 
 

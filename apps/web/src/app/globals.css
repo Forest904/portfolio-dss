@@ -518,3 +518,21 @@ th {
     margin-bottom: 22px;
   }
 }
+/* Decision alternatives share the historical workspace's visual language. */
+.profile-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; border: 0; padding: 0; }
+.profile-controls legend { margin-bottom: 12px; font-weight: 700; }
+.profile-option { display: flex; align-items: flex-start; gap: 10px; padding: 18px; border: 1px solid #cad7ce; border-radius: 12px; cursor: pointer; }
+.profile-option.selected { background: #e7f0e9; border-color: #236449; }
+.profile-option input { width: auto; margin-top: 4px; accent-color: #236449; }
+.profile-option small { display: block; margin-top: 8px; line-height: 1.5; }
+.profile-option:focus-within { outline: 3px solid #426a8c; outline-offset: 3px; }
+.frontier-results pre { overflow: auto; max-height: 420px; font-size: 12px; }
+.frontier-results .fine-print { overflow-wrap: anywhere; }
+.frontier-results li { margin-bottom: 8px; line-height: 1.6; }
+.frontier-results, .frontier-results > *, .frontier-chart-scroll { min-width: 0; }
+.frontier-chart-scroll { overflow-x: auto; }
+.frontier-chart-scroll svg { display: block; width: 100%; min-width: 560px; }
+.frontier-tick { font-size: 12px; fill: #42564a; }
+.result-views { display: flex; gap: 12px; flex-wrap: wrap; }
+.result-views [aria-pressed="true"] { background: #e7f0e9; border-color: #236449; }
+@media (max-width: 700px) { .profile-controls { grid-template-columns: 1fr; } }

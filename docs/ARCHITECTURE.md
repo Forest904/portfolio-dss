@@ -47,6 +47,15 @@ The exact subfolders can evolve, but dependency direction must remain stable.
 
 The web app uses Next.js App Router under `src/app`, feature-owned UI under `src/features`, and external communication helpers under `src/lib`.
 
+Week 5 adds a separate `EfficientFrontierGenerator` domain protocol and a SciPy frontier adapter.
+`PortfolioFrontierService` orchestrates one aligned stock-plus-SPY sample, model estimation,
+frontier generation, reference metrics, typed decision facts, and report hashing. The API owns
+Pydantic serialization of the immutable report values; the domain and application remain
+framework-independent. The existing Week 4 optimizer contract and route remain available.
+
+The `portfolio-frontier` web feature consumes the complete report through a Next.js proxy. Its
+three-profile selection is local state, with no market-data request when switching profiles.
+
 ## Backend dependency rule
 
 ```text

@@ -2,7 +2,7 @@
 
 Portfolio DSS is an interactive decision support system that helps non-expert investors understand and compare stock portfolios. It makes assumptions, risk, and uncertainty visible; it is not a trading bot or a promise of future performance.
 
-## Week 4 mean-variance optimization
+## Week 5 efficient frontier and decision alternatives
 
 The repository is a modular monorepo containing:
 
@@ -22,6 +22,12 @@ uses a replaceable SciPy SLSQP adapter to recommend a long-only, fully invested 
 explicit risk-aversion value and optional uniform maximum weight. Solver diagnostics and an
 independent constraint check accompany every successful recommendation.
 
+Choose **Compare alternatives** in the web workspace to see the estimated efficient frontier and
+switch between conservative, moderate, and aggressive allocations. The profiles target 20%, 50%,
+and 80% of the achievable expected-return range. Current holdings, equal weight, and SPY use the
+same historical observations for comparison. Allocation changes and numerical decision facts update
+locally when switching profiles. **Analyze portfolio** retains the observed historical analysis view.
+
 Available endpoints:
 
 - `GET /health`;
@@ -29,7 +35,8 @@ Available endpoints:
 - `GET /api/v1/assets/{ticker}`;
 - `POST /api/v1/portfolios/valuation`;
 - `POST /api/v1/portfolios/analyze`;
-- `POST /api/v1/portfolios/optimize`.
+- `POST /api/v1/portfolios/optimize`;
+- `POST /api/v1/portfolios/frontier`.
 
 Example valuation request:
 
@@ -114,3 +121,8 @@ The defaults can be changed with `PORTFOLIO_DSS_CACHE_PATH`,
 `PORTFOLIO_DSS_PROVIDER_TIMEOUT`, `PORTFOLIO_DSS_PRICE_CACHE_TTL_HOURS`,
 `PORTFOLIO_DSS_UNIVERSE_CACHE_TTL_HOURS`, `PORTFOLIO_DSS_STALE_FALLBACK_DAYS`, and
 `PORTFOLIO_DSS_MAX_CONSECUTIVE_MISSING`.
+
+Frontier profile defaults can be changed with `PORTFOLIO_DSS_CONSERVATIVE_FRACTION`,
+`PORTFOLIO_DSS_MODERATE_FRACTION`, and `PORTFOLIO_DSS_AGGRESSIVE_FRACTION` (defaults: `0.2`, `0.5`,
+`0.8`). Values must be finite, strictly increasing, and within `[0, 1]`; invalid settings fail at
+startup. The effective mapping and its semantic version appear in each frontier report.

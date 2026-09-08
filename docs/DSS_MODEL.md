@@ -103,7 +103,8 @@ This allows future replacement by shrinkage or robust covariance methods.
 The initial implementation uses annualized sample covariance over the exact return observations
 used by the expected-return estimator. The Week 4 solver is SciPy SLSQP with independently checked
 long-only, budget, and optional uniform maximum-weight constraints. Risk aversion is an explicit
-finite non-negative API input until the guided mapping is introduced in Week 6.
+finite non-negative API input. Week 5 adds a separate frontier-position mapping; the guided
+questionnaire remains Week 6 work.
 
 ## Efficient frontier
 
@@ -120,9 +121,25 @@ The UI should let the user compare at least:
 
 ## Risk preference
 
+Week 5 computes the efficient branch by minimizing variance at 21 return targets from the
+minimum-variance portfolio's estimated return to maximum achievable return. Endpoint ties prefer
+higher return at minimum variance and lower variance at maximum return. Exact profile targets are
+added when they fall between chart samples.
+
+The three named alternatives use `target = minimum_variance_return + fraction *
+(maximum_return - minimum_variance_return)`, with default fractions 0.2, 0.5, and 0.8. These are
+positions along the **return range**, not percentages of risk. Moderate is initially selected in
+the UI; users select only the three named alternatives. A constrained or degenerate portfolio may
+have one solution shared by all profiles. See ADR 0009 for numerical and comparison conventions.
+
+Current, equal-weight, and SPY reference estimates share the same aligned observations. Historical
+analysis remains a separate view and its CAGR is never used as a frontier coordinate.
+
 The user-facing risk profile must not expose `lambda` as the primary concept.
 
-A guided questionnaire produces a preference score. The application layer maps that score into an optimization configuration.
+In Week 6, a guided questionnaire will produce a preference score. The application layer maps that
+score into an optimization configuration. Week 5 already exposes a typed, versioned, configurable
+profile mapping without asking questionnaire questions.
 
 The mapping must be:
 

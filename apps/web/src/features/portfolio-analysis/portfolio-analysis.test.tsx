@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PortfolioAnalysisWorkspace } from "./portfolio-analysis";
 import type { PortfolioAnalysis } from "./types";
+import frontierFixture from "../portfolio-frontier/__fixtures__/frontier.json";
 
 const report: PortfolioAnalysis = {
   valuation: {
@@ -47,6 +48,24 @@ const report: PortfolioAnalysis = {
 afterEach(() => vi.restoreAllMocks());
 
 describe("PortfolioAnalysisWorkspace", () => {
+  it("keeps observed history and estimated alternatives in distinct switchable views", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify(report), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(frontierFixture), { status: 200 }));
+    render(<PortfolioAnalysisWorkspace />);
+    fireEvent.click(screen.getByRole("button", { name: "Analyze portfolio" }));
+    await screen.findByText("Portfolio snapshot");
+    fireEvent.click(screen.getByRole("button", { name: "Compare alternatives" }));
+    await screen.findByRole("heading", { name: "Explore the trade-off" });
+    expect(screen.queryByText("Annualized return (CAGR)")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Historical analysis" }));
+    expect(screen.getByText("Annualized return (CAGR)")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Explore the trade-off" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Decision alternatives" }));
+    expect(screen.getByRole("heading", { name: "Explore the trade-off" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("adds and removes holding inputs", () => {
     render(<PortfolioAnalysisWorkspace />);
     fireEvent.click(screen.getByRole("button", { name: /add holding/i }));

@@ -120,7 +120,48 @@ input.
 
 Infeasible constraints return `INFEASIBLE_CONSTRAINTS` with status 422. Solver failure or failed
 post-solve verification returns `OPTIMIZATION_FAILED` with status 500 and never returns target
-weights. Efficient-frontier context remains a Week 5 endpoint.
+weights. Efficient-frontier context is available through the separate Week 5 endpoint below.
+
+### `POST /api/v1/portfolios/frontier`
+
+Accepts current positions, optional `history.start` / `history.end`, and optional
+`constraints.max_weight` in `(0, 1]`. No lambda or client-side profile mapping is accepted.
+
+```json
+{
+  "positions": [{"ticker": "AAPL", "quantity": "10"}, {"ticker": "MSFT", "quantity": "4"}],
+  "history": {"start": "2023-09-01", "end": "2026-09-01"},
+  "constraints": {"max_weight": 0.6}
+}
+```
+
+The response contains:
+
+- `frontier.points`: stable report-local IDs, target return, ordered asset weights, estimated annual
+  return/variance/volatility, and independently checked solver diagnostics;
+- `frontier.profiles`: conservative/moderate/aggressive names, configured fractions, exact targets,
+  and point references (multiple profiles can refer to one point);
+- `references`: current, equal-weight, and `sp500_proxy` weights and comparable annual estimates,
+  with `valid`, `exceeds_max_weight`, or `outside_investable_universe` constraint status;
+- `facts`: stable IDs, profile, kind, subject, comparison, numeric value, and unit. Return, volatility,
+  and allocation changes are **percentage points**; largest holdings and binding caps are
+  **weight fractions**; concentration is dimensionless **HHI**;
+- selected-stock and benchmark `expected_return_model` / `risk_model` metadata, including model
+  vectors and covariance matrices, plus explicit financial `conventions`;
+- shared `window`, `constraints`, versioned `profile_configuration`, universe/price provenance,
+  assumptions, diagnostics, and `report_hash`. Window exclusions are `[asset_id, count]` pairs.
+
+Default profiles are 20%, 50%, and 80% of the return range from minimum variance to maximum
+achievable return. The curve contains 21 targets plus any additional exact profile targets, with
+equivalent points collapsed. These metrics contain no `objective_value`.
+
+All references share the frontier's return observations. SPY is fetched only as the benchmark and
+is excluded from optimizer weights. Current and equal-weight metrics are model evaluations of
+fixed weights, not the observed buy-and-hold CAGR from `/analyze`.
+
+Invalid inputs/infeasible caps use status 422, unavailable market data uses 503, and solver failure
+or invalid output uses `OPTIMIZATION_FAILED` / 500 without recommendations. Existing minimum-history
+and missing-data error codes apply to benchmark data too. Profile selection needs no further API call.
 
 ## Guided portfolio builder
 

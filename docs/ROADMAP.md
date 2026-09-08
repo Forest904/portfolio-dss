@@ -91,6 +91,13 @@ Exit criteria:
 
 **Goal:** make trade-offs visible.
 
+**State:** implemented; automated interaction exit criterion verified. Desktop/mobile visual
+verification is pending because the implementation session had no available browser connection.
+
+The frontier API and web workspace use configurable 20%/50%/80% return-range profiles, shared
+current/equal-weight/SPY estimates, and deterministic decision facts. See ADR 0009 and
+`docs/TESTING.md` for methodology and remaining visual checks.
+
 Deliverables:
 
 - efficient frontier;
