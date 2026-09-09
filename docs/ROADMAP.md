@@ -133,6 +133,10 @@ Exit criteria:
 
 **Goal:** represent possible outcomes as distributions.
 
+**State:** complete. Numerical/API/UI automation, performance validation, and attached-Chrome
+desktop/mobile visual acceptance passed. Mobile chart readability and keyboard scrolling were
+fixed and visually rechecked on 2026-09-09; see ADR 0011 and `docs/TESTING.md`.
+
 Deliverables:
 
 - `SimulationEngine`;

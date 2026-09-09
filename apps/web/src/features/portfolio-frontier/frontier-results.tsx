@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SimulationResults } from "../portfolio-simulation/simulation-results";
 
 import type { DecisionFact, FrontierReport, ProfileName } from "./types";
 
@@ -24,9 +25,10 @@ function factText(fact: DecisionFact): string {
   }
 }
 
-export function FrontierResults({ report, suggestedProfile, alternatives }: {
+export function FrontierResults({ report, suggestedProfile, alternatives, capital }: {
   report: FrontierReport;
   suggestedProfile?: ProfileName;
+  capital?: string;
   alternatives?: { profile: ProfileName; allocations: { asset_id: string; weight: number; amount: string }[] }[];
 }) {
   const [selected, setSelected] = useState<ProfileName>(suggestedProfile ?? "moderate");
@@ -105,6 +107,7 @@ export function FrontierResults({ report, suggestedProfile, alternatives }: {
       {report.references.map((item) => <tr key={item.id}><th>{labels[item.id]}</th><td>{percent.format(item.metrics.expected_return)}</td><td>{percent.format(item.metrics.volatility)}</td><td>{item.constraint_status === "valid" ? "Valid" : item.constraint_status === "exceeds_max_weight" ? "Exceeds weight cap" : "Reference only; outside investable stocks"}</td></tr>)}
     </tbody></table></div></section>
     <section className="data-card"><h3>Decision facts · {labels[selected]}</h3><ul>{report.facts.filter((fact) => fact.profile === selected).map((fact) => <li key={fact.id}>{factText(fact)}</li>)}</ul></section>
+    <SimulationResults report={report} selected={selected} capital={capital ?? report.holdings_capital ?? null} />
     <section className="data-card"><h3>Assumptions</h3><ul>{report.assumptions.map((item) => <li key={item}>{item}</li>)}</ul></section>
     <details className="details-card"><summary>Advanced frontier details</summary>
       <h3>Frontier values</h3><div className="table-scroll"><table><thead><tr><th>Point</th><th>Estimated annual return</th><th>Estimated annual volatility</th></tr></thead><tbody>{report.frontier.points.map((item) => <tr key={item.id}><th>{item.id}</th><td>{percent.format(item.metrics.expected_return)}</td><td>{percent.format(item.metrics.volatility)}</td></tr>)}</tbody></table></div>

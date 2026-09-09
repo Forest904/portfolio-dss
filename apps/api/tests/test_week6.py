@@ -61,6 +61,7 @@ def test_shared_snapshot_capital_and_cache(tmp_path: Path) -> None:
     stages: list[str] = []
     service = fixture_service(repository=repo)
     model = service.calculate(stages.append)
+    assert model.report.holdings_capital is None
     assert stages == [
         "loading_universe",
         "loading_prices",

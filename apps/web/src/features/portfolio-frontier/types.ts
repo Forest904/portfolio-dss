@@ -27,6 +27,7 @@ type ReturnModel = ModelMetadata & { expected_returns: number[] };
 type RiskModel = ModelMetadata & { covariance_matrix: number[][]; missing_data_policy: "no_imputation" };
 type Provenance = { provider: string; retrieved_at: string; content_hash: string; stale_fallback: boolean };
 export type FrontierReport = {
+  holdings_capital: string | null;
   window: { requested_start: string; requested_end: string; effective_start: string; effective_end: string;
     aligned_price_observations: number; return_observations: number; excluded_observations: [string, number][] };
   frontier: { points: FrontierPoint[]; profiles: ProfileReference[]; diagnostics: string[] };

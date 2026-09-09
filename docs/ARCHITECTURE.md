@@ -274,3 +274,16 @@ Extend optimization constraints and validation. Do not change portfolio analytic
 - Validate ticker inputs against the selected universe.
 - Rate-limit expensive analysis endpoints if the app is publicly deployed.
 - Present the product as educational decision support, not guaranteed financial advice.
+
+## Week 7 simulation boundary
+
+`domain.simulation` owns immutable scenario/configuration/assumption/result types and the
+`SimulationEngine` protocol. `PortfolioSimulationService` translates numerical failures into
+structured application errors. `NumpySimulationEngine` implements bounded marginal Monte Carlo;
+NumPy is a direct locked dependency. The composition root supports engine injection.
+
+The synchronous stateless simulation route consumes client-supplied compact estimates from an
+existing report, independently of providers, optimization and guided jobs. The shared web
+simulation feature constructs these snapshots and renders both journeys. No prices are refreshed
+when changing simulation settings. ADR 0011 documents the guided-cache schema migration required
+by the additive holdings-capital field and the limits of replay guarantees.

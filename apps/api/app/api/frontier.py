@@ -1,6 +1,7 @@
 """HTTP boundary for efficient-frontier reports."""
 
 from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, Request
 from pydantic import Field
@@ -46,6 +47,7 @@ class PortfolioFrontierResponse(ApiModel):
     assumptions: tuple[str, ...]
     diagnostics: tuple[str, ...]
     report_hash: str
+    holdings_capital: Decimal | None = None
 
 
 @router.post(

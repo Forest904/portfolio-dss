@@ -139,3 +139,78 @@ within their cards on mobile. The in-app browser was unavailable, so standalone 
 Week 5 existing-holdings frontier was also inspected at both viewport sizes during Week 6.
 Final validation: 29 frontend tests, TypeScript, ESLint and production build passed. Backend
 pytest, Ruff and mypy include the guided data adapter concurrency/retry and worker-lease checks.
+
+## Week 7 validation (2026-09-08)
+
+Numerical tests cover fixed-seed replay, ordering, identical parameters, seed variation, capital
+scaling, positive and ordered percentiles, histogram counts, strict terminal loss, 1/3/5-year
+zero-volatility cases, incompatible metadata, input limits and explicit overflow/underflow failure.
+Independent analytical lognormal checks use five-standard-error tolerances for means, quantiles
+and loss probabilities. API tests run with no provider or optimizer dependencies. Integration
+checks assert holdings capital comes from aligned prices and guided capital does not invent holdings.
+The guided-cache upgrade is tested for safe, idempotent invalidation of incompatible blobs.
+
+Validation passed: 154 backend tests, 35 frontend tests, Ruff, mypy, ESLint, TypeScript and the
+production Next.js build.
+
+Frontend tests cover lazy opening, both journeys, profiles, benchmark selection, advanced controls,
+client cache reuse, stale results, ignored late responses, retries, accessible chart/table labels
+and proxy errors. The production build includes the new simulation proxy route.
+
+Run the offline performance check from `apps/api`:
+
+```powershell
+uv run python -m tests.week7_benchmark
+```
+
+Six distinct portfolios, 50,000 paths each, five years (60 monthly observations), seed 42:
+0.4435 seconds computation; 173,342,720 bytes (165.3 MiB) peak process working set, including Python,
+NumPy and test/import overhead. Measured on Windows 11 build 26200, AMD64 Family 26 Model 96,
+Python 3.12.2, NumPy 2.5.2. This meets the five-second development-machine target; it is not a
+concurrent-request throughput benchmark.
+
+### Attached-browser acceptance (2026-09-08–09)
+
+**Passed on 2026-09-09.** Browser discovery identified the attached Chrome extension and the
+application was opened and operated through that connection. A temporary disconnect returned
+`Browser is not available: 1` and an empty browser inventory; after reconnection, discovery
+identified Chrome again and visual checks resumed. No standalone browser or live market data
+was used. Screenshots were inspected directly in the browser-tool session; this run does not
+add screenshot files to the repository.
+
+API: `uv run uvicorn tests.week6_demo:app --host 127.0.0.1 --port 8016` from `apps/api`.
+Web: `API_BASE_URL=http://127.0.0.1:8016`, `npm run dev -- --hostname 127.0.0.1` from
+`apps/web`. The page reported API connected. Chrome viewport overrides were 1440×1000 and
+390×844, and the override was reset after inspection.
+
+| Check | Observed evidence |
+| --- | --- |
+| Guided journey | Completed all three moderate preferences, entered USD 10,000, received the 12-stock synthetic recommendation, then opened uncertainty. Default comparison was equal weight; no current holdings were invented. |
+| Existing holdings | Submitted the default AAPL 10 / MSFT 4 holdings with blank dates and cap. Uncertainty opened against current holdings with USD 3,514 displayed; replay metadata retained the exact aligned capital, 3513.5671941032906. |
+| Desktop visuals | Inspected both journeys' paired fans, percentile bands, histograms, legends, terminal metrics, and assumptions. Paired fan axes matched (for example 0–162.6K USD at five years for moderate/current); elapsed-year ticks, USD units, and histogram percentage units were readable. |
+| Mobile visuals | Both journeys stacked their fans and wrapped controls, legends, and assumptions inside the cards. Initial inspection found SVG labels shrinking too far. The fix adds readable minimum chart widths, larger SVG text, and horizontal scroll regions. Reinspection confirmed readable labels, accessible full charts and metric columns through scrolling, and no page-wide horizontal overflow visible. |
+| Profiles and comparators | Used conservative, moderate, and aggressive selections, including arrow-key radio navigation. Compared current holdings, equal weight, and SPY. With the QA API deliberately stopped, profile/comparator changes continued updating the displayed distributions without a new request. |
+| Horizons and advanced settings | Ran one-, three-, and five-year cases in both journeys. Exercised 1,000, 10,000, and 50,000 paths and seeds 0, 7, 42, and 4294967295 across the cases. The browser rejected seed -1 with its minimum-value validation. Output metadata and chart horizons followed the effective settings. |
+| Stale and loading states | Changing settings retained old charts with an explicit stale notice and their original horizon/path/seed metadata. Uncached runs showed disabled “Simulating…” and “Calculating possible outcomes…” status; successful completion removed the stale notice. Automated tests separately cover ignored late responses. |
+| Failure, cache, retry | Stopped only the synthetic QA API, then requested an uncached five-year case. The UI displayed “The simulation API could not be reached” and retry instructions while retaining the recommendation and stale results. Returning to cached one-year settings succeeded while the API remained stopped. Restarting the same synthetic API and running five years succeeded. |
+| Keyboard access | Tab reached controls, fan/histogram scroll regions, the terminal table, and assumptions. Arrow keys scrolled charts/table and changed native choices; Enter expanded assumptions. Focus outlines were visible. |
+| Fresh-request replay | Reloaded the page to clear component cache, repeated the holdings journey, and reran five years / 50,000 paths / seed 4294967295. Input fingerprint and result hash exactly matched the earlier request despite different displayed profile/comparator selections. |
+
+Replay evidence (NumPy 2.5.2; Python 3.12.2; AMD64):
+
+```text
+source_report_hash: 208c2d66843e981cf3075fd080c0140af72e3012c427d70ac63bbd1989cfda28
+input_fingerprint:  1f9cbbf7dc51dc1185f6fdb249f742832762a591714fdfb20b3386426cc7f830
+result_hash:        3193cbf2fffd634e3f7439c03dbc9c80b46bd30e063e304a6e53058001dc2521
+```
+
+Post-fix checks passed: all 35 frontend tests, the 16 backend simulation tests
+(`uv run pytest tests/test_simulation.py -q`), ESLint, TypeScript, production Next.js build,
+and `git diff --check`. The earlier full 154-test backend/Ruff/mypy validation above remains
+the backend baseline; no backend implementation changed during this visual acceptance pass.
+
+Limitations: mobile acceptance uses a real attached Chrome browser with a narrow viewport,
+not physical iOS/Android hardware. Wide charts and tables deliberately require horizontal
+scrolling on mobile. Synthetic returns are illustrative, not market forecasts. This pass is
+not a cross-browser or screen-reader audit; exact numerical replay retains ADR 0011's
+identical-input/environment requirement.

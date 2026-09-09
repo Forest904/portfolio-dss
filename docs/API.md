@@ -277,3 +277,51 @@ for each profile, and a shared model containing the frontier report, coverage ex
 provenance and model hash. There is no current-portfolio reference in construction reports.
 Money serializes as decimal strings. Model and personalized report hashes have separate identities.
 The web proxies these endpoints under `/api/guided-recommendations` without response caching.
+
+## POST /api/v1/portfolios/simulations
+
+Stateless synchronous endpoint; the web proxy is `/api/portfolio-simulations`. Body:
+
+```json
+{
+  "scenario": {
+    "source_report_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "initial_capital": 10000,
+    "configuration": { "horizon_years": 1, "paths": 10000, "seed": 42 },
+    "portfolios": [{
+      "id": "moderate",
+      "annual_mean": 0.08,
+      "annual_variance": 0.04,
+      "metadata": {
+        "estimation_start": "2023-01-03", "estimation_end": "2026-01-02",
+        "observations": 755, "return_estimator": "historical_arithmetic_mean",
+        "risk_estimator": "historical_sample_covariance", "currency": "USD",
+        "price_field": "adjusted_close", "return_convention": "simple",
+        "frequency": "daily", "annualization_periods": 252
+      }
+    }]
+  }
+}
+```
+
+One to six unique IDs; every portfolio must share the estimation window and observation count.
+Only USD adjusted-close daily simple-return estimates annualized by 252 are supported. Mean and
+variance must be finite, variance nonnegative, capital positive. Settings are integers: horizons
+1/3/5, path counts 1000/10000/50000, seeds 0 through 4294967295. Omitted configuration uses 1/10000/42.
+The source hash is provenance, not authentication of submitted estimates.
+
+Response includes canonical `scenario`, `assumptions`, `numerical_environment`, `input_fingerprint`,
+`result_hash`, sorted `portfolios` and 31 common `histogram_edges`. Each portfolio contains
+`terminal_value` and `terminal_return` (mean, population standard deviation and ordered
+P5/P25/P50/P75/P95), `probability_of_loss`, monthly `fan` points including month zero, and
+30 `histogram_counts`. Return values and loss probability are fractions, not percentages;
+terminal values and histogram edges are nominal USD. No individual simulation paths are returned.
+
+Invalid scenarios return 422; numerical overflow/underflow returns 422 with
+`SIMULATION_NUMERICAL_FAILURE`. No partial results are returned. Retrying identical input under
+the same numerical environment reproduces results without market-data or optimization calls.
+
+Frontier responses additionally expose nullable decimal-string `holdings_capital`, using their
+aligned end-date prices. Guided reports leave this null and use their existing `capital` field.
+Older persisted guided reports become retryable `REPORT_VERSION_CHANGED` failures after migration;
+recalculate the recommendation to obtain a compatible report.

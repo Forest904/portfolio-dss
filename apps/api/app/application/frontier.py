@@ -92,6 +92,7 @@ class FrontierReport:
     assumptions: tuple[str, ...]
     diagnostics: tuple[str, ...]
     report_hash: str
+    holdings_capital: Decimal | None = None
 
 
 def decision_facts(
@@ -183,6 +184,7 @@ class PortfolioFrontierService:
         """Stable cache identity for the configured model and profile implementations."""
         return repr(
             (
+                "frontier-report-v2",
                 self._profiles,
                 type(self._returns).__module__,
                 type(self._returns).__qualname__,
@@ -350,9 +352,10 @@ class PortfolioFrontierService:
                 benchmark_risk,
             ),
         )
+        total: Decimal | None = None
         if normalized:
             values = tuple(quantity * aligned[asset][-1] for asset, quantity in normalized)
-            total = sum(values)
+            total = sum(values, Decimal(0))
             current = PortfolioWeights(asset_ids, tuple(float(value / total) for value in values))
             references = (reference("current", current, signal, risk), *references)
         assumptions = (
@@ -412,6 +415,7 @@ class PortfolioFrontierService:
                 *frontier.diagnostics,
             ),
             "",
+            total,
         )
         stable = asdict(report)
         for key in ("universe_provenance", "price_provenance"):

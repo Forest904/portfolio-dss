@@ -50,6 +50,26 @@ class SQLiteGuidedRepository:
                 CREATE TABLE IF NOT EXISTS guided_models (
                     key TEXT PRIMARY KEY, created REAL NOT NULL, model BLOB NOT NULL);
             """)
+            if db.execute("PRAGMA user_version").fetchone()[0] < 1:
+                # FrontierReport gained a slot in Week 7. Older pickle blobs are incompatible.
+                db.execute("DELETE FROM guided_models")
+                db.execute(
+                    "UPDATE guided_runs SET model=NULL, stage='failed', error=? "
+                    "WHERE model IS NOT NULL",
+                    (
+                        json.dumps(
+                            asdict(
+                                JobFailure(
+                                    "REPORT_VERSION_CHANGED",
+                                    "This cached report predates the simulation update. "
+                                    "Please recalculate.",
+                                )
+                            )
+                        ),
+                    ),
+                )
+                db.execute("PRAGMA user_version=1")
+                db.commit()
 
     def recover(self) -> None:
         with closing(self.connect()) as db:

@@ -126,3 +126,11 @@ Frontier profile defaults can be changed with `PORTFOLIO_DSS_CONSERVATIVE_FRACTI
 `PORTFOLIO_DSS_MODERATE_FRACTION`, and `PORTFOLIO_DSS_AGGRESSIVE_FRACTION` (defaults: `0.2`, `0.5`,
 `0.8`). Values must be finite, strictly increasing, and within `[0, 1]`; invalid settings fail at
 startup. The effective mapping and its semantic version appear in each frontier report.
+
+### Monte Carlo uncertainty (Week 7)
+
+Open **Explore uncertainty** under Decision alternatives in either portfolio journey. Compare
+1/3/5-year simulated outcomes with fan charts, terminal histograms and loss probabilities; adjust
+path count and random seed in advanced controls. Simulations assume continuously maintained
+weights and constant parameters, and are not guarantees. See [ADR 0011](docs/adr/0011-monte-carlo-uncertainty.md)
+and [validation status](docs/TESTING.md). Desktop/mobile visual acceptance remains pending.

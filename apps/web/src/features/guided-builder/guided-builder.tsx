@@ -134,6 +134,6 @@ function GuidedResults({ report }: { report: GuidedReport }) {
       {(report.model.report.universe_provenance.stale_fallback || report.model.price_sources.some((p) => p.stale_fallback)) && <p role="status">Cached source data was used after a refresh failed. Check retrieval dates below.</p>}
       <details><summary>Data coverage and source details ({coverage.excluded.length} exclusions)</summary><ul>{coverage.excluded.map((e) => <li key={e.asset_id}>{e.asset_id}: {e.reason}</li>)}</ul><p>Policy: {coverage.policy}. No missing prices are filled.</p><pre>{JSON.stringify(report.model.price_sources, null, 2)}</pre><p>Report: {report.report_hash}</p></details>
     </section>
-    <FrontierResults key={report.report_hash} report={report.model.report} suggestedProfile={report.preference.suggested_profile} alternatives={report.alternatives} />
+    <FrontierResults key={report.report_hash} report={report.model.report} capital={report.capital} suggestedProfile={report.preference.suggested_profile} alternatives={report.alternatives} />
   </>;
 }

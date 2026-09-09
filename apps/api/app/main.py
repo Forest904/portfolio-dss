@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from app.api.frontier import router as frontier_router
 from app.api.guided import router as guided_router
 from app.api.router import router
+from app.api.simulation import router as simulation_router
 from app.application import (
     ApplicationError,
     PortfolioAnalysisService,
@@ -21,6 +22,7 @@ from app.application import (
     PortfolioValuationService,
 )
 from app.application.frontier import PortfolioFrontierService
+from app.application.simulation import PortfolioSimulationService
 from app.core.config import API_DESCRIPTION, API_TITLE, API_VERSION, Settings, load_settings
 from app.domain import (
     CurrentUniverseProvider,
@@ -32,6 +34,7 @@ from app.domain import (
     RiskEstimator,
 )
 from app.domain.frontier import EfficientFrontierGenerator
+from app.domain.simulation import SimulationEngine
 from app.infrastructure import (
     ScipyMeanVarianceOptimizer,
     SQLiteCache,
@@ -44,6 +47,7 @@ from app.infrastructure.guided_jobs import (
     ProductionGuidedFactory,
     SQLiteGuidedRepository,
 )
+from app.infrastructure.simulation import NumpySimulationEngine
 
 
 def create_app(
@@ -57,6 +61,7 @@ def create_app(
     frontier_generator: EfficientFrontierGenerator | None = None,
     clock: Callable[[], datetime] | None = None,
     guided_jobs: ProcessGuidedJobs | None = None,
+    simulation_engine: SimulationEngine | None = None,
 ) -> FastAPI:
     runtime = settings or load_settings()
     cache = SQLiteCache(runtime.cache_path)
@@ -90,6 +95,9 @@ def create_app(
 
     application = FastAPI(
         title=API_TITLE, description=API_DESCRIPTION, version=API_VERSION, lifespan=lifespan
+    )
+    application.state.simulation_service = PortfolioSimulationService(
+        simulation_engine or NumpySimulationEngine()
     )
     application.state.guided_jobs = jobs
     application.state.universe_provider = universe
@@ -150,6 +158,7 @@ def create_app(
     application.include_router(router)
     application.include_router(frontier_router)
     application.include_router(guided_router)
+    application.include_router(simulation_router)
     return application
 
 

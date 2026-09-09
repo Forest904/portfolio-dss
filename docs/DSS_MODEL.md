@@ -220,3 +220,18 @@ Capital only scales weights into illustrative USD amounts. Compute normalized de
 shares of total cents, floor each amount, then distribute residual cents by decreasing fractional
 remainder, breaking ties by ticker. The returned mathematical target weights remain unchanged.
 This is not integer-share allocation. See ADR 0010 for coverage and execution decisions.
+
+## Week 7 simulation methodology
+
+The constant-weight lognormal model uses the frontier's annual estimated portfolio mean and
+variance, with monthly exact observation increments over 1, 3 or 5 years. This approximates
+annualized daily arithmetic estimates as diffusion parameters, assumes idealized continuous
+rebalancing, and keeps parameters constant. It does not model parameter uncertainty or joint
+outperformance probabilities. See ADR 0011 for the formula, numerical conventions and replay contract.
+
+Both journeys compare identical starting capital across alternatives, equal weight and SPY;
+existing-holdings reports also include current weights and their aligned end-date capital.
+The default is one year, 10,000 paths, seed 42. Terminal summaries and histograms are empirical;
+loss means strictly finishing below initial nominal capital. Fan bands are pointwise percentiles,
+not guaranteed intervals or realizable paths. The UI displays these assumptions and preserves
+recommendations when simulation fails.

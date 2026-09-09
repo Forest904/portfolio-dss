@@ -1,5 +1,6 @@
 from dataclasses import replace
 from datetime import date, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -47,6 +48,11 @@ def test_frontier_report_matches_shared_inputs_and_deterministic_facts(tmp_path:
     response = api.post("/api/v1/portfolios/frontier", json=REQUEST)
     assert response.status_code == 200, response.text
     report = response.json()
+    expected_capital = (
+        Decimal(10) * Decimal(prices.prices["AAPL"][-1][1])
+        + Decimal(4) * Decimal(prices.prices["MSFT"][-1][1])
+    )
+    assert Decimal(report["holdings_capital"]) == expected_capital
     repeated = api.post("/api/v1/portfolios/frontier", json=REQUEST).json()
     assert report["report_hash"] == repeated["report_hash"]
     assert prices.requested_asset_ids == [("AAPL", "MSFT", "SPY")] * 2
