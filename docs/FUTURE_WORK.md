@@ -1,81 +1,63 @@
 # Future Work
 
-This file collects ideas that are intentionally outside the Phase B delivery target.
+These extensions are outside the Phase B submission. Their priority follows the limitations exposed
+by the current decision-support workflow rather than adding complexity for its own sake.
 
-## Broader investment universes
+## 1. More realistic portfolio decisions
 
-The initial S&P 500 universe can be replaced or supplemented through the universe/provider contracts.
+The current optimizer excludes costs, taxes, slippage, turnover, and integer-share execution. A
+first Phase C increment should add transaction-cost and turnover constraints, followed by a separate
+integer-share allocation step. Explanations must distinguish mathematical target weights from
+executable trades.
 
-Candidates:
+Related limitation: [Models and recommendations](LIMITATIONS.md#models-and-recommendations).
 
-- Nasdaq-100;
-- all Nasdaq-listed equities;
-- broader US market;
-- international equities;
-- ETFs and multi-asset portfolios.
+## 2. Point-in-time data and broader evaluation
 
-## Short selling
+Historical analysis currently applies today’s S&P 500 membership to earlier periods. Point-in-time
+constituents, delisted securities, and an independent exchange calendar would reduce survivorship
+and calendar bias. Evaluation should then expand beyond the selected five-stock basket and include
+multiple periods and market regimes.
 
-Phase C can allow negative weights with explicit limits such as:
+Related limitations: [Data](LIMITATIONS.md#data) and
+[Simulation and evaluation](LIMITATIONS.md#simulation-and-evaluation).
 
-- minimum weight per asset;
-- gross exposure constraint;
-- net exposure constraint;
-- leverage limits.
+## 3. Stronger risk and uncertainty models
 
-This requires changes to optimization constraints, validation, explanations, and risk communication.
+Potential replacements behind the existing contracts include shrinkage covariance, robust
+optimization, CVaR, Black-Litterman, and parameter-uncertainty simulations. Each addition should be
+compared with the simple baseline and disclose any new assumptions.
 
-## Multi-source expected-return signals
+Related limitations: [Models and recommendations](LIMITATIONS.md#models-and-recommendations) and
+[Simulation and evaluation](LIMITATIONS.md#simulation-and-evaluation).
 
-Future return signals may include:
+## 4. Multiple expected-return signals
 
-- social sentiment;
-- news sentiment;
-- company fundamentals;
-- macroeconomic variables;
-- analyst estimates;
-- advanced time-series/ML forecasts.
+Future estimators may use fundamentals, macroeconomic variables, analyst estimates, news, or social
+sentiment. They should implement `ExpectedReturnEstimator` and emit compatible, versioned signals. A
+future `SignalAggregator` may combine them with explicit weights, coverage checks, and diagnostics.
+Advanced machine-learning models should enter only after reliable out-of-sample comparisons against
+the historical and exponential baselines.
 
-These should implement `ExpectedReturnEstimator` and optionally be combined through `SignalAggregator`.
+## 5. Broader investment universes
 
-## Sentiment project integration
+The provider contracts can support the Nasdaq-100, broader US equities, international markets, ETFs,
+or multi-asset portfolios. Multi-currency accounting and market-specific calendars must accompany
+international expansion; they cannot be hidden inside the current USD convention.
 
-A separate sentiment-analysis project could expose outputs such as:
+Related limitation: [Data](LIMITATIONS.md#data).
 
-```text
-SentimentReturnSignal
-- asset_id
-- horizon
-- expected_return_adjustment or score
-- confidence
-- source coverage
-- model version
-- generated_at
-```
+## 6. Durable multi-user operation
 
-The DSS should treat this as one uncertain signal among several, not as absolute truth.
+The local SQLite cache and guided-job worker target one API process. A hosted version would require
+durable shared storage, distributed job ownership, authentication, saved portfolios, rate limits,
+monitoring, and explicit service objectives before horizontal scaling.
 
-## Advanced optimization
+Related limitation: [Operations](LIMITATIONS.md#operations).
 
-Potential methods:
+## Deferred product boundaries
 
-- Black-Litterman;
-- CVaR optimization;
-- robust optimization;
-- shrinkage covariance;
-- transaction-cost-aware rebalancing;
-- turnover constraints;
-- cardinality constraints;
-- multi-period portfolio optimization.
-
-## Advanced forecasting
-
-Only after the backtesting infrastructure is reliable:
-
-- regularized regression;
-- tree-based models;
-- gradient boosting;
-- temporal deep learning;
-- probabilistic forecasting.
-
-Every advanced model should be compared with simple baselines out of sample.
+Short selling, leverage, options, automated brokerage execution, high-frequency trading, and a full
+robo-advisory suitability process remain outside the current product boundary. Any future inclusion
+would require new constraints, validation, explanations, and regulatory review rather than a simple
+UI switch.

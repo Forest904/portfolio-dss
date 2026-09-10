@@ -8,6 +8,79 @@ Do not introduce microservices in Phase A/B.
 
 The design goal is replaceability of data sources and analytical models, not distributed-system complexity.
 
+## System context
+
+```mermaid
+flowchart LR
+    User[Non-expert investor] -->|portfolio or preferences| Web[Next.js web application]
+    Web -->|HTTP and JSON| API[FastAPI application]
+    API --> Services[Application services]
+    Services --> Domain[Financial domain and contracts]
+    Services --> Adapters[Infrastructure adapters]
+    Adapters --> Wikipedia[Wikipedia constituents]
+    Adapters --> Yahoo[Yahoo Finance prices]
+    Adapters --> SQLite[(SQLite cache and jobs)]
+    Adapters --> Numerical[SciPy and NumPy]
+    Services --> Reports[Typed reports, facts, assumptions, hashes]
+    Reports --> Web
+```
+
+The production composition uses external sources and a local cache. The supported presentation
+composition replaces external providers with deterministic synthetic adapters while preserving the
+same API, application, and domain boundaries.
+
+## Dependency and adapter boundaries
+
+```mermaid
+flowchart TB
+    subgraph Delivery
+        Next[Next.js feature modules]
+        HTTP[FastAPI routes and Pydantic schemas]
+    end
+    subgraph Core
+        App[Application orchestration]
+        Domain[Domain values, calculations, and protocols]
+    end
+    subgraph Adapters
+        Data[Universe and market-data adapters]
+        Solver[Frontier and optimizer adapters]
+        Simulation[Monte Carlo adapter]
+        Persistence[SQLite cache and guided jobs]
+    end
+
+    Next --> HTTP
+    HTTP --> App
+    App --> Domain
+    Data -. implements ports .-> Domain
+    Solver -. implements ports .-> Domain
+    Simulation -. implements ports .-> Domain
+    Persistence -. supports use cases .-> App
+```
+
+Dependencies point inward. Domain and application code do not import FastAPI, Next.js, SQLite,
+Wikipedia, Yahoo Finance, or provider-specific data structures.
+
+## Decision flow
+
+```mermaid
+flowchart LR
+    Input[Holdings or guided preferences] --> Window[Aligned price window]
+    Window --> ReturnModel[Expected-return estimator]
+    Window --> RiskModel[Historical covariance]
+    ReturnModel --> Optimizer[Mean-variance frontier]
+    RiskModel --> Optimizer
+    Optimizer --> Alternatives[Conservative, moderate, aggressive]
+    Alternatives --> Facts[Decision facts and explanations]
+    Alternatives --> MonteCarlo[Seeded uncertainty simulation]
+    Alternatives --> Backtest[Walk-forward evaluation]
+    Facts --> Decision[User comparison]
+    MonteCarlo --> Decision
+    Backtest --> Decision
+```
+
+Observed history, estimated parameters, simulated outcomes, and out-of-sample results remain
+explicitly distinguished throughout this flow.
+
 ## Repository layout
 
 ```text

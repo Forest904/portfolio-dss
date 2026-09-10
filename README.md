@@ -1,71 +1,44 @@
 # Portfolio DSS
 
-Portfolio DSS is an interactive decision support system that helps non-expert investors understand and compare stock portfolios. It makes assumptions, risk, and uncertainty visible; it is not a trading bot or a promise of future performance.
+Portfolio DSS is an educational decision support system for understanding and comparing stock
+portfolios. It exposes the trade-off between estimated return, risk, and uncertainty for a current
+portfolio or a guided portfolio built from capital and risk preferences.
 
-## Week 5 efficient frontier and decision alternatives
+The system does not execute trades, promise future performance, or provide a regulated suitability
+assessment. Every recommendation includes its assumptions, model provenance, and deterministic
+explanations.
 
-The repository is a modular monorepo containing:
+## Phase B capabilities
 
-- `apps/api`: Python 3.12, FastAPI, and a framework-independent financial domain;
-- `apps/web`: Node.js 24, Next.js App Router, and TypeScript;
-- `docs`: product, architecture, data, API, testing, and decision records;
-- `data`, `notebooks`, and `scripts`: placeholders for later roadmap work.
+- Value and analyze ticker-and-quantity portfolios over an explicit historical window.
+- Compare the current portfolio with equal weight and an S&P 500 benchmark represented by SPY.
+- Generate a long-only mean-variance efficient frontier with optional concentration limits.
+- Explore conservative, moderate, and aggressive alternatives without exposing mathematical tuning
+  as the primary user choice.
+- Build a portfolio from USD capital and a short, deterministic preference questionnaire.
+- Switch between historical arithmetic means and a simple exponentially weighted return estimate.
+- Compare simulated outcome distributions with reproducible Monte Carlo seeds.
+- Review concentration, contribution to risk, solver diagnostics, assumptions, and traceable
+  recommendation explanations.
+- Evaluate historical and forecast estimators with a frozen, walk-forward backtest.
 
-The backend retrieves current S&P 500 constituents from Wikipedia and adjusted daily prices from
-Yahoo Finance through replaceable adapters. It now analyzes entered buy-and-hold portfolios against
-an equal-dollar buy-and-hold alternative and the SPY total-return proxy on one aligned history
-window. Normalized source responses are cached in `data/market_data.sqlite3` for traceability and
-repeatable results.
+## Architecture
 
-The backend also estimates annualized historical arithmetic returns and sample covariance, then
-uses a replaceable SciPy SLSQP adapter to recommend a long-only, fully invested allocation for an
-explicit risk-aversion value and optional uniform maximum weight. Solver diagnostics and an
-independent constraint check accompany every successful recommendation.
+The repository is a modular monorepo with one FastAPI application and one Next.js application.
+Financial domain logic is independent of HTTP frameworks, persistence, and market-data libraries.
+Providers, numerical solvers, and storage are replaceable adapters behind typed contracts.
 
-Choose **Compare alternatives** in the web workspace to see the estimated efficient frontier and
-switch between conservative, moderate, and aggressive allocations. The profiles target 20%, 50%,
-and 80% of the achievable expected-return range. Current holdings, equal weight, and SPY use the
-same historical observations for comparison. Allocation changes and numerical decision facts update
-locally when switching profiles. **Analyze portfolio** retains the observed historical analysis view.
-
-Available endpoints:
-
-- `GET /health`;
-- `GET /api/v1/universes/sp500`;
-- `GET /api/v1/assets/{ticker}`;
-- `POST /api/v1/portfolios/valuation`;
-- `POST /api/v1/portfolios/analyze`;
-- `POST /api/v1/portfolios/optimize`;
-- `POST /api/v1/portfolios/frontier`.
-
-Example valuation request:
-
-```json
-{
-  "positions": [
-    {"ticker": "AAPL", "quantity": "10"},
-    {"ticker": "MSFT", "quantity": "4.5"}
-  ],
-  "as_of": "2026-09-04"
-}
+```mermaid
+flowchart LR
+    User[User] --> Web[Next.js web application]
+    Web --> API[FastAPI API]
+    API --> App[Application services]
+    App --> Domain[Financial domain and contracts]
+    App --> Adapters[Provider, solver, simulation, and cache adapters]
+    Adapters --> Sources[Wikipedia, Yahoo Finance, SQLite, SciPy, NumPy]
 ```
 
-Omit `as_of` to use the latest available completed US session. The response always reports the
-actual common valuation date, source provenance, assumptions, and a deterministic snapshot hash.
-
-The analysis endpoint accepts the same positions plus an optional `history.start` and
-`history.end`. It defaults to the latest three-year window and returns chart-ready performance,
-annualized return/volatility, covariance/correlation, holding and sector concentration, benchmark
-comparisons, diagnostics, provenance, and a deterministic analysis hash. The web app provides the
-corresponding interactive analysis form and progressively disclosed results.
-
-## Week 9 walk-forward backtesting
-
-The offline CLI compares historical and forecast optimization under rolling/expanding training,
-periodically rebalanced equal weight, and SPY buy-and-hold on one frozen historical period.
-Open the [standalone backtest report](examples/backtest/week9/report/report.html) or follow the
-[replay and snapshot commands](examples/backtest/week9/README.md). The API and web app are not
-required. See [ADR 0013](docs/adr/0013-walk-forward-backtesting.md) for execution timing and limitations.
+See [Architecture](docs/ARCHITECTURE.md) for the system, dependency, and decision-flow diagrams.
 
 ## Prerequisites
 
@@ -73,19 +46,50 @@ required. See [ADR 0013](docs/adr/0013-walk-forward-backtesting.md) for executio
 - [uv](https://docs.astral.sh/uv/)
 - Node.js 24 and npm
 
-## Run locally
+## Reproducible offline demo
 
-Start the API:
+The supported presentation path uses deterministic synthetic market data. It requires no provider
+access, cache preparation, notebook execution, or manual data transformation. The UI labels the
+fixture provenance so it cannot be mistaken for historical evidence.
+
+In terminal 1:
 
 ```powershell
 cd apps/api
-uv sync --all-groups
+uv sync --locked --all-groups
+uv run uvicorn app.cli.demo:app --host 127.0.0.1 --port 8011
+```
+
+In terminal 2, using PowerShell:
+
+```powershell
+cd apps/web
+npm ci
+$env:API_BASE_URL="http://127.0.0.1:8011"
+npm run dev
+```
+
+For a POSIX shell, replace the last two commands with:
+
+```bash
+API_BASE_URL=http://127.0.0.1:8011 npm run dev
+```
+
+Open `http://localhost:3000`. The status panel should report that the API is connected. Follow the
+fixed five-minute path and troubleshooting guidance in the [demo runbook](docs/DEMO.md).
+
+## Production data mode
+
+Use the normal API composition to retrieve the current S&P 500 membership from Wikipedia and
+adjusted daily prices from Yahoo Finance:
+
+```powershell
+cd apps/api
+uv sync --locked --all-groups
 uv run uvicorn app.main:app --reload
 ```
 
-The API is available at `http://127.0.0.1:8000`; verify it with `GET http://127.0.0.1:8000/health`.
-
-In a second terminal, start the web app:
+Then start the web app in a second terminal:
 
 ```powershell
 cd apps/web
@@ -93,27 +97,30 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. The page checks the API server-side and remains usable when the API is offline. To use another API location, copy `.env.example` to `.env.local` and change `API_BASE_URL`.
+The default API URL is `http://127.0.0.1:8000`. Copy `apps/web/.env.example` to
+`apps/web/.env.local` only when a different URL is required. Production mode depends on external
+provider availability and uses the local SQLite cache under `data/`.
 
-### Offline demonstration
+## Reproducible historical evidence
 
-To exercise the complete API/web workflow without network data or cache preparation, start the
-explicitly synthetic API fixture from `apps/api`:
+The interactive offline demo and the historical evaluation serve different purposes:
 
-```powershell
-uv run uvicorn app.cli.demo:app --port 8011
-```
+- [Week 9 frozen backtest](examples/backtest/week9/README.md) compares six strategies over the
+  same 1,759 daily evaluation returns from 2019-01-02 through 2025-12-31.
+- [Week 11 case studies](examples/case-studies/week11/README.md) regenerate three decision-support
+  examples from the same frozen price snapshot.
+- Both report formats are self-contained HTML with adjacent full-precision JSON, configuration,
+  provenance, assumptions, and stable content hashes.
 
-Then start the web app with `API_BASE_URL=http://127.0.0.1:8011`. The UI labels fixture provenance;
-production startup continues to use Wikipedia and Yahoo. Reproducible real-data case-study reports
-and their one-command generation instructions are under
-[`examples/case-studies/week11/`](examples/case-studies/week11/).
+The [methodology and results](docs/METHODOLOGY_AND_RESULTS.md) document explains what these results
+do and do not support.
 
 ## Quality checks
 
 Run backend checks from `apps/api`:
 
 ```powershell
+uv sync --locked --all-groups
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy
@@ -123,46 +130,45 @@ uv run pytest
 Run frontend checks from `apps/web`:
 
 ```powershell
+npm ci
 npm run lint
 npm run typecheck
 npm test
 npm run build
 ```
 
-GitHub Actions runs these commands independently for the backend and frontend using the committed lockfiles.
+GitHub Actions runs the same locked backend and frontend gates. The final Phase B baseline contains
+227 backend tests and 42 frontend tests.
 
 ## Financial defaults
 
-The initial convention is USD, daily adjusted-close prices, daily simple returns, and 252 trading periods per year. Missing values are never imputed silently; series are aligned by timestamp intersection and inadequate data will be reported as an error by the Week 2 data pipeline. S&P 500 comparisons use adjusted SPY prices as an explicitly labelled total-return ETF proxy.
+- Base currency: USD.
+- Price field: daily adjusted close.
+- Return convention: daily simple returns.
+- Annualization: 252 trading periods.
+- Missing data: no silent imputation; aligned observations use timestamp intersection.
+- Benchmark: SPY adjusted prices, explicitly labelled as an S&P 500 total-return ETF proxy.
+- Default simulation: one year, 10,000 paths, seed 42.
 
-See [`docs/`](docs/) for scope, roadmap, mathematical model, and architecture decisions.
-Read [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) before interpreting recommendations or results.
+Market-data, cache, and frontier-profile settings are documented in [Data](docs/DATA.md) and exposed
+in generated report assumptions. Invalid configuration fails explicitly.
 
-### Market-data settings
+## Documentation
 
-The defaults can be changed with `PORTFOLIO_DSS_CACHE_PATH`,
-`PORTFOLIO_DSS_PROVIDER_TIMEOUT`, `PORTFOLIO_DSS_PRICE_CACHE_TTL_HOURS`,
-`PORTFOLIO_DSS_UNIVERSE_CACHE_TTL_HOURS`, `PORTFOLIO_DSS_STALE_FALLBACK_DAYS`, and
-`PORTFOLIO_DSS_MAX_CONSECUTIVE_MISSING`.
+- [Product and scope](docs/PRODUCT.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Domain model](docs/DOMAIN_MODEL.md)
+- [Methodology and results](docs/METHODOLOGY_AND_RESULTS.md)
+- [Data and provenance](docs/DATA.md)
+- [API contract](docs/API.md)
+- [Testing and validation](docs/TESTING.md)
+- [Demo runbook](docs/DEMO.md)
+- [Italian presentation deck](docs/presentation/portfolio-dss-week12-it.pptx)
+- [Italian presentation and demo script](docs/presentation/demo-script-it.md)
+- [Limitations](docs/LIMITATIONS.md)
+- [Future work](docs/FUTURE_WORK.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Architecture decision records](docs/adr/)
 
-Frontier profile defaults can be changed with `PORTFOLIO_DSS_CONSERVATIVE_FRACTION`,
-`PORTFOLIO_DSS_MODERATE_FRACTION`, and `PORTFOLIO_DSS_AGGRESSIVE_FRACTION` (defaults: `0.2`, `0.5`,
-`0.8`). Values must be finite, strictly increasing, and within `[0, 1]`; invalid settings fail at
-startup. The effective mapping and its semantic version appear in each frontier report.
-
-### Monte Carlo uncertainty (Week 7)
-
-Open **Explore uncertainty** under Decision alternatives in either portfolio journey. Compare
-1/3/5-year simulated outcomes with fan charts, terminal histograms and loss probabilities; adjust
-path count and random seed in advanced controls. Simulations assume continuously maintained
-weights and constant parameters, and are not guarantees. See [ADR 0011](docs/adr/0011-monte-carlo-uncertainty.md)
-and [validation status](docs/TESTING.md). Desktop/mobile visual acceptance remains pending.
-
-### Expected-return models (Week 8)
-
-Both journeys offer Historical mean (default) and Simple forecast, a normalized exponential
-mean with a fixed 63-trading-observation half-life. Compare both annualized return estimates at
-the same portfolio weights; expand diagnostics and paginated asset estimates for details.
-Changing the estimator requires recalculation. Risk remains historical sample covariance.
-See [ADR 0012](docs/adr/0012-simple-explainable-forecast.md) for methodology, API compatibility,
-and cache migration. Predictive accuracy evaluation is deferred to Week 9.
+Read [Limitations](docs/LIMITATIONS.md) before interpreting any recommendation, simulation, or
+historical result.

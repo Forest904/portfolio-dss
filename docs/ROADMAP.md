@@ -241,15 +241,21 @@ Exit criteria:
 
 **Goal:** present a coherent DSS project.
 
+**State:** complete. The definitive README, architecture and methodology documentation, offline
+demo runbook, Italian 12-slide presentation, timed narration, and limitation-linked future work are
+included. Clean installs, all quality gates, the complete synthetic demo journey, frozen-report
+hash reproduction, static fallbacks, Mermaid rendering, presentation package integrity, and
+rendered-slide inspection passed on 2026-09-11. No release tag or version change is part of this
+submission.
+
 Deliverables:
 
 - final README;
 - architecture diagrams;
 - methodology/results documentation;
 - demo dataset/configuration;
-- presentation/demo script;
+- Italian presentation deck and timed demo script;
 - future-work section;
-- tagged release.
 
 Exit criteria:
 
