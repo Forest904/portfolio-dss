@@ -97,6 +97,27 @@ class SQLiteGuidedRepository:
                 db.execute("PRAGMA user_version=2")
                 db.commit()
 
+            if db.execute("PRAGMA user_version").fetchone()[0] < 3:
+                db.execute("BEGIN IMMEDIATE")
+                db.execute("DELETE FROM guided_models")
+                db.execute(
+                    "UPDATE guided_runs SET model=NULL, stage='failed', error=? "
+                    "WHERE model IS NOT NULL",
+                    (
+                        json.dumps(
+                            asdict(
+                                JobFailure(
+                                    "REPORT_VERSION_CHANGED",
+                                    "This cached report predates the explanation update. "
+                                    "Please recalculate.",
+                                )
+                            )
+                        ),
+                    ),
+                )
+                db.execute("PRAGMA user_version=3")
+                db.commit()
+
     def recover(self) -> None:
         with closing(self.connect()) as db:
             db.execute(

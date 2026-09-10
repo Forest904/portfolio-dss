@@ -1,3 +1,4 @@
+import json
 import math
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
@@ -227,6 +228,26 @@ def test_version_one_migration(tmp_path: Path) -> None:
         assert row["model"] is None and row["stage"] == "failed"
         assert "REPORT_VERSION_CHANGED" in row["error"]
         assert db.execute("SELECT COUNT(*) FROM guided_models").fetchone()[0] == 0
+
+
+def test_version_two_explanation_migration_is_idempotent(tmp_path: Path) -> None:
+    repository = SQLiteGuidedRepository(tmp_path / "jobs.db")
+    repository.initialize()
+    with repository.connect() as db:
+        db.execute("PRAGMA user_version=2")
+        db.execute(
+            "INSERT INTO guided_runs VALUES ('old','key',0,'completed',?,NULL,'historical_mean')",
+            (b"old-report",),
+        )
+        db.execute("INSERT INTO guided_models VALUES ('old',0,?)", (b"old-model",))
+    repository.initialize()
+    repository.initialize()
+    with repository.connect() as db:
+        row = db.execute("SELECT * FROM guided_runs WHERE id='old'").fetchone()
+        assert row["model"] is None and row["stage"] == "failed"
+        assert json.loads(row["error"])["code"] == "REPORT_VERSION_CHANGED"
+        assert db.execute("SELECT COUNT(*) FROM guided_models").fetchone()[0] == 0
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 3
 
 
 def test_legacy_injection_and_configuration_identity(tmp_path: Path) -> None:

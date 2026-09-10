@@ -14,6 +14,25 @@ const response = () => new Response(JSON.stringify(report), { status: 200 });
 afterEach(() => vi.restoreAllMocks());
 
 describe("Frontier decision workspace", () => {
+  it("renders profile-specific structured explanations and evidence links", () => {
+    const explained = structuredClone(report);
+    explained.explanations = explained.frontier.profiles.map(({ name }) => ({
+      profile: name,
+      baseline: "current" as const,
+      rule_version: "decision-explanations-v1",
+      summary: `${name} explanation summary`,
+      reasons: [{ id: `${name}.trade_off`, category: "trade_off" as const, headline: `${name} trade-off`, detail: "Traceable explanation detail.", evidence_fact_ids: [`${name}.current.expected_return_change`] }],
+    }));
+    render(<FrontierResults report={explained} />);
+    expect(screen.getByText("moderate explanation summary")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "moderate trade-off" })).toBeInTheDocument();
+    const evidence = screen.getByRole("link", { name: "moderate.current.expected_return_change" });
+    expect(evidence).toHaveAttribute("href", "#fact-moderate.current.expected_return_change");
+    fireEvent.click(evidence);
+    expect(screen.getByText("Advanced recommendation details").closest("details")).toHaveAttribute("open");
+    fireEvent.click(screen.getByRole("radio", { name: /^Aggressive/ }));
+    expect(screen.getByText("aggressive explanation summary")).toBeInTheDocument();
+  });
   it("submits constraints, selects all profiles, and changes allocations, metrics and facts without fetching again", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => response());
     render(<PortfolioAnalysisWorkspace />);
@@ -36,15 +55,18 @@ describe("Frontier decision workspace", () => {
       expect(allocations.getByRole("columnheader", { name: `${label} weight` })).toBeInTheDocument();
       const assetRow = within(allocations.getByRole("row", { name: /^AAPL / }));
       expect(assetRow.getAllByRole("cell")[1]).toHaveTextContent(percent.format(point.weights.weights[0]));
-      expect(screen.getByRole("heading", { name: `Decision facts · ${label}` })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Why this portfolio?" })).toBeInTheDocument();
       const fact = report.facts.find((item) => item.id === `${name}.current.expected_return_change`)!;
       const signed = new Intl.NumberFormat("en-US", { signDisplay: "exceptZero", maximumFractionDigits: 2 }).format(fact.value);
-      expect(screen.getByText(`Estimated annual return: ${signed} percentage points versus Current portfolio.`)).toBeInTheDocument();
+      expect(screen.getAllByText(`Estimated annual return: ${signed} percentage points versus Current portfolio.`).length).toBeGreaterThan(0);
     }
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("group", { name: "Risk preference" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: /annual risk and return frontier/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Assumptions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Full allocations and structured facts" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Models, assumptions, and estimator diagnostics" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Data coverage and provenance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Solver and reproducibility details" })).toBeInTheDocument();
   });
 
   it.each(["Ticker 1", "Quantity 1", "Start date", "End date", "Maximum weight per stock (%)"])("invalidates results when %s changes", async (label) => {
@@ -93,6 +115,6 @@ describe("Frontier decision workspace", () => {
     expect(within(screen.getByLabelText("Selected alternative metrics")).getByText("-4%")).toBeInTheDocument();
     expect(screen.getByRole("img").innerHTML).not.toMatch(/NaN|Infinity/);
     fireEvent.click(screen.getByRole("radio", { name: /^Aggressive/ }));
-    expect(screen.getByRole("heading", { name: "Allocation: current vs Aggressive" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Largest allocation changes · Aggressive" })).toBeInTheDocument();
   });
 });

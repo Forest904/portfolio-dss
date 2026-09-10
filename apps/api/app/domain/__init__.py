@@ -68,6 +68,7 @@ from app.domain.optimization import (
     SolverDiagnostics,
     evaluate_portfolio,
 )
+from app.domain.risk import RiskContribution, portfolio_risk_contributions
 from app.domain.universe import (
     SP500_BENCHMARK_ASSET_ID,
     SP500_BENCHMARK_NAME,
@@ -130,6 +131,7 @@ __all__ = [
     "ReturnConvention",
     "ReturnFrequency",
     "RiskEstimate",
+    "RiskContribution",
     "RiskEstimator",
     "SolverDiagnostics",
     "TimeHorizon",
@@ -139,4 +141,5 @@ __all__ = [
     "calculate_historical_analytics",
     "concentration",
     "evaluate_portfolio",
+    "portfolio_risk_contributions",
 ]

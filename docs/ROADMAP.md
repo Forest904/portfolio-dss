@@ -198,6 +198,11 @@ Exit criteria:
 
 **Goal:** turn analytics into support for action.
 
+**State:** complete. Deterministic, fact-backed explanations, signed portfolio risk attribution,
+baseline-relative allocation rationale, focused result views, advanced evidence panels, chart and
+state polish, and inline accessible validation are implemented. Backend/frontend checks and
+desktop/mobile browser acceptance passed on 2026-09-10; see ADR 0014 and `docs/TESTING.md`.
+
 Deliverables:
 
 - structured decision facts;

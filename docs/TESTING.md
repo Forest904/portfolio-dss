@@ -348,3 +348,56 @@ launch failed, so acceptance used headless Chrome screenshots. The CLI blocks fi
 local HTTP server served the unchanged report. Its sole browser console error was an unrelated
 favicon 404; no external report assets or application calls were needed. Mobile testing used a
 narrow browser viewport, not physical mobile hardware.
+
+## Week 10 acceptance evidence — 2026-09-10
+
+Backend validation from `apps/api`:
+
+```powershell
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy app tests
+uv run pytest -q
+```
+
+Lint, formatting, and strict typing passed for 81 Python files. The full backend suite passed
+**214 tests** in 23.02 seconds, with the two existing Starlette/httpx/AnyIO deprecation warnings.
+A Windows native access-violation diagnostic appeared during the pre-existing concurrent Week 8
+test while the suite continued to a successful exit; the isolated concurrency test then passed
+cleanly. Risk tests cover hand calculations, signed diversifiers, zero and singular covariance,
+permutation invariance, invalid inputs, and the contribution-sum invariant. API and persistence
+tests cover fact/explanation consistency, baseline selection, caps, stable hashes, and the
+idempotent schema-v3 cache migration.
+
+Frontend validation from `apps/web`:
+
+```powershell
+npm test -- --run
+npm run typecheck
+npm run lint
+npm run build
+```
+
+All **42 frontend tests** passed. TypeScript, ESLint, and the Next.js production build also passed.
+Coverage includes profile-local explanation updates, evidence expansion, guided preference
+rationale, decision-focused allocations, inline validation/focus, explicit empty states, and
+simulation takeaways. Repository `git diff --check` passed.
+
+### Browser acceptance
+
+Both guided construction and existing-holdings analysis were exercised against the synthetic
+Week 8 API in Chromium at desktop and 390×844 mobile widths. The primary view clearly identifies
+the equal-weight or current-portfolio baseline, estimated annual return/volatility trade-off,
+largest allocation changes, signed risk context, assumptions, and non-guarantee language.
+Evidence links expose the complete structured facts in advanced details without another request.
+
+Duplicate ticker validation was verified inline with focus moving to the first invalid control.
+Historical percentage axes, gridlines, readable date labels, mobile horizontal scrolling, the
+simulation-not-run state, and the deterministic median/P5/loss-probability takeaway were visually
+checked. Valid prior results remain available during recoverable interactions. The only browser
+console error was the unrelated favicon 404.
+
+Screenshots inspected under ignored `output/playwright/`: `week10-guided-desktop.png`,
+`week10-guided-mobile-explanation.png`, `week10-holdings-desktop-explanation.png`,
+`week10-holdings-mobile-explanation.png`, `week10-history-desktop.png`, and
+`week10-history-mobile-fixed.png`. Mobile testing used a narrow viewport, not physical hardware.

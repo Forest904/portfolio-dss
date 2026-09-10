@@ -38,6 +38,14 @@ describe("Guided builder", () => {
     expect(screen.getByLabelText("Investable capital (USD)")).toHaveValue("123.45");
   });
 
+  it("shows inline validation before submitting incomplete preferences", () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    render(<GuidedBuilder />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue to capital" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Answer all three preference questions");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("reaches a suggested recommendation and explores alternatives without a new request", async () => {
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(json({ id: "fixture-job" }, 202)).mockResolvedValueOnce(json(fixture));
     render(<GuidedBuilder />);
@@ -47,7 +55,7 @@ describe("Guided builder", () => {
     expect(screen.getByRole("radio", { name: /^Conservative/ })).toBeChecked();
     expect(screen.queryByText("Current weight")).not.toBeInTheDocument();
     expect(screen.getByText(/12 of 12 current constituent/)).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Amount (USD)" })).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader", { name: "Amount (USD)" })).toHaveLength(2);
     fireEvent.click(screen.getByRole("radio", { name: /^Aggressive/ }));
     expect(screen.getByText(/Exploring the Aggressive alternative/)).toBeInTheDocument();
     expect(within(screen.getByRole("table", { name: "Allocation comparison" })).getByText("Aggressive weight")).toBeInTheDocument();

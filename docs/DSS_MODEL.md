@@ -205,6 +205,20 @@ Examples of explainable statements include:
 - changing the expected-return estimator materially changes the recommended allocation.
 
 The explanation engine must consume structured analysis facts rather than free-form hidden model reasoning.
+
+## Week 10 explanation rules
+
+The application now attributes modeled variance with signed Euler contributions
+`w_i * (Sigma w)_i`. Relative contributions divide by total portfolio variance and sum to one;
+negative values are retained as diversification effects. Effectively zero variance has no relative
+attribution and produces a visible diagnostic.
+
+`decision-explanations-v1` consumes typed facts and emits a current-relative explanation for an
+existing portfolio or an equal-weight-relative explanation for guided construction. The main view
+shows three to five ranked reasons; exact facts, model inputs, assumptions and solver details remain
+available progressively. Allocation evidence is contextual rather than a single-factor causal
+claim because mean-variance weights are determined jointly by expected returns, covariance and
+constraints. See ADR 0014.
 # Guided construction methodology (Week 6)
 
 The three-question `guided-preferences-v1` rule selects the least aggressive answer and identifies

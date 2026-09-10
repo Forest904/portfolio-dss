@@ -92,6 +92,26 @@ def test_frontier_report_matches_shared_inputs_and_deterministic_facts(tmp_path:
         assert concentration["value"] == pytest.approx(
             sum(w * w for w in point["weights"]["weights"])
         )
+        explanation = next(
+            item for item in report["explanations"] if item["profile"] == profile["name"]
+        )
+        assert explanation["baseline"] == "current"
+        assert explanation["rule_version"] == "decision-explanations-v1"
+        assert 3 <= len(explanation["reasons"]) <= 5
+        fact_ids = {fact["id"] for fact in report["facts"]}
+        assert all(
+            evidence in fact_ids
+            for reason in explanation["reasons"]
+            for evidence in reason["evidence_fact_ids"]
+        )
+        risk_shares = [
+            fact["value"]
+            for fact in report["facts"]
+            if fact["profile"] == profile["name"]
+            and fact["kind"] == "risk_contribution"
+            and fact["comparison"] == point["id"]
+        ]
+        assert sum(risk_shares) == pytest.approx(1.0)
 
 
 def test_cap_status_and_collapsed_alternatives(tmp_path: Path) -> None:
@@ -108,6 +128,10 @@ def test_cap_status_and_collapsed_alternatives(tmp_path: Path) -> None:
         "outside_investable_universe",
     ]
     assert len([f for f in report["facts"] if f["kind"] == "binding_cap"]) == 6
+    assert all(
+        any(reason["category"] == "constraint" for reason in explanation["reasons"])
+        for explanation in report["explanations"]
+    )
 
 
 def test_configured_fractions_and_hash_ignore_retrieval_time(

@@ -146,6 +146,9 @@ The response contains:
 - `facts`: stable IDs, profile, kind, subject, comparison, numeric value, and unit. Return, volatility,
   and allocation changes are **percentage points**; largest holdings and binding caps are
   **weight fractions**; concentration is dimensionless **HHI**;
+- `explanations`: one deterministic explanation set per profile, including its current/equal-weight
+  baseline, rule version, plain-language summary, three to five ranked reasons, and the fact IDs
+  supporting each reason;
 - selected-stock and benchmark `expected_return_model` / `risk_model` metadata, including model
   vectors and covariance matrices, plus explicit financial `conventions`;
 - shared `window`, `constraints`, versioned `profile_configuration`, universe/price provenance,
@@ -162,6 +165,12 @@ fixed weights, not the observed buy-and-hold CAGR from `/analyze`.
 Invalid inputs/infeasible caps use status 422, unavailable market data uses 503, and solver failure
 or invalid output uses `OPTIMIZATION_FAILED` / 500 without recommendations. Existing minimum-history
 and missing-data error codes apply to benchmark data too. Profile selection needs no further API call.
+
+Week 10 facts also expose annual asset estimates, signed relative risk contributions,
+risk-contribution changes, concentration changes and equivalent-profile flags. Relative risk
+contributions use `w_i * (Sigma w)_i / (w' Sigma w)` and may be negative. They are omitted with a
+diagnostic when modeled variance is effectively zero. Existing holdings use `current` as the
+explanation baseline; guided construction uses `equal_weight`.
 
 ## Guided portfolio builder
 

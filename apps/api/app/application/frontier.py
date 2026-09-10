@@ -39,6 +39,7 @@ from app.domain import (
     RiskEstimate,
     RiskEstimator,
     evaluate_portfolio,
+    portfolio_risk_contributions,
 )
 from app.domain.catalog import UniverseSnapshot
 from app.domain.conventions import FinancialConventions
@@ -71,12 +72,35 @@ class DecisionFact:
         "allocation_change",
         "largest_holding",
         "concentration",
+        "concentration_change",
         "binding_cap",
+        "asset_expected_return",
+        "risk_contribution",
+        "risk_contribution_change",
+        "equivalent_profile",
     ]
     subject: str
     comparison: str | None
     value: float
-    unit: Literal["percentage_points", "weight_fraction", "hhi"]
+    unit: Literal["percentage_points", "weight_fraction", "annual_fraction", "hhi", "flag"]
+
+
+@dataclass(frozen=True, slots=True)
+class DecisionReason:
+    id: str
+    category: Literal["trade_off", "allocation", "diversification", "constraint", "model"]
+    headline: str
+    detail: str
+    evidence_fact_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class DecisionExplanationSet:
+    profile: ProfileName
+    baseline: Literal["current", "equal_weight"]
+    rule_version: str
+    summary: str
+    reasons: tuple[DecisionReason, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +109,7 @@ class FrontierReport:
     frontier: FrontierResult
     references: tuple[ReferencePortfolio, ...]
     facts: tuple[DecisionFact, ...]
+    explanations: tuple[DecisionExplanationSet, ...]
     expected_return_model: ExpectedReturnSignal
     risk_model: RiskEstimate
     benchmark_expected_return_model: ExpectedReturnSignal
@@ -105,9 +130,21 @@ class FrontierReport:
 def decision_facts(
     frontier: FrontierResult,
     references: tuple[ReferencePortfolio, ...],
-) -> tuple[DecisionFact, ...]:
+    expected_returns: ExpectedReturnSignal,
+    risk: RiskEstimate,
+) -> tuple[tuple[DecisionFact, ...], tuple[str, ...]]:
     facts: list[DecisionFact] = []
     current = next((reference for reference in references if reference.id == "current"), None)
+    baseline = current or next(
+        reference for reference in references if reference.id == "equal_weight"
+    )
+    baseline_risk = portfolio_risk_contributions(baseline.weights, risk)
+    diagnostics: list[str] = []
+    if baseline_risk is None:
+        diagnostics.append(
+            f"Relative risk contribution is unavailable for {baseline.id}: "
+            "modeled variance is effectively zero."
+        )
     for profile in frontier.profiles:
         point = next(point for point in frontier.points if point.id == profile.point_id)
         for reference in references:
@@ -131,9 +168,26 @@ def decision_facts(
                         "percentage_points",
                     )
                 )
-        if current is not None:
+        for asset, estimate in zip(
+            expected_returns.asset_ids, expected_returns.expected_returns, strict=True
+        ):
+            facts.append(
+                DecisionFact(
+                    f"{profile.name}.{asset}.asset_expected_return",
+                    profile.name,
+                    "asset_expected_return",
+                    asset,
+                    None,
+                    estimate,
+                    "annual_fraction",
+                )
+            )
+        if baseline is not None:
             for asset, weight, previous in zip(
-                point.weights.asset_ids, point.weights.weights, current.weights.weights, strict=True
+                point.weights.asset_ids,
+                point.weights.weights,
+                baseline.weights.weights,
+                strict=True,
             ):
                 facts.append(
                     DecisionFact(
@@ -141,7 +195,7 @@ def decision_facts(
                         profile.name,
                         "allocation_change",
                         asset,
-                        "current",
+                        baseline.id,
                         100 * (weight - previous),
                         "percentage_points",
                     )
@@ -169,6 +223,61 @@ def decision_facts(
                 "hhi",
             )
         )
+        baseline_hhi = math.fsum(weight * weight for weight in baseline.weights.weights)
+        facts.append(
+            DecisionFact(
+                f"{profile.name}.{baseline.id}.concentration_change",
+                profile.name,
+                "concentration_change",
+                point.id,
+                baseline.id,
+                math.fsum(w * w for w in point.weights.weights) - baseline_hhi,
+                "hhi",
+            )
+        )
+        point_risk = portfolio_risk_contributions(point.weights, risk)
+        if point_risk is None:
+            diagnostics.append(
+                f"Relative risk contribution is unavailable for {profile.name}: "
+                "modeled variance is effectively zero."
+            )
+        if point_risk is not None and baseline_risk is not None:
+            for selected_item, baseline_item in zip(point_risk, baseline_risk, strict=True):
+                facts.extend(
+                    (
+                        DecisionFact(
+                            f"{profile.name}.{selected_item.asset_id}.risk_contribution",
+                            profile.name,
+                            "risk_contribution",
+                            selected_item.asset_id,
+                            point.id,
+                            selected_item.relative_contribution,
+                            "weight_fraction",
+                        ),
+                        DecisionFact(
+                            f"{profile.name}.{baseline.id}.{selected_item.asset_id}.risk_contribution",
+                            profile.name,
+                            "risk_contribution",
+                            selected_item.asset_id,
+                            baseline.id,
+                            baseline_item.relative_contribution,
+                            "weight_fraction",
+                        ),
+                        DecisionFact(
+                            f"{profile.name}.{selected_item.asset_id}.risk_contribution_change",
+                            profile.name,
+                            "risk_contribution_change",
+                            selected_item.asset_id,
+                            baseline.id,
+                            100
+                            * (
+                                selected_item.relative_contribution
+                                - baseline_item.relative_contribution
+                            ),
+                            "percentage_points",
+                        ),
+                    )
+                )
         for asset in point.solver.binding_asset_ids:
             weight = point.weights.weights[point.weights.asset_ids.index(asset)]
             facts.append(
@@ -182,7 +291,227 @@ def decision_facts(
                     "weight_fraction",
                 )
             )
-    return tuple(facts)
+        equivalents = sorted(
+            other.name
+            for other in frontier.profiles
+            if other.name != profile.name and other.point_id == profile.point_id
+        )
+        for other in equivalents:
+            facts.append(
+                DecisionFact(
+                    f"{profile.name}.{other}.equivalent_profile",
+                    profile.name,
+                    "equivalent_profile",
+                    profile.name,
+                    other,
+                    1.0,
+                    "flag",
+                )
+            )
+    return tuple(facts), tuple(dict.fromkeys(diagnostics))
+
+
+def decision_explanations(
+    frontier: FrontierResult,
+    facts: tuple[DecisionFact, ...],
+    baseline: Literal["current", "equal_weight"],
+    estimator_name: str,
+) -> tuple[DecisionExplanationSet, ...]:
+    """Render stable, cautious explanations exclusively from structured facts."""
+
+    baseline_label = (
+        "your current portfolio" if baseline == "current" else "an equal-weight portfolio"
+    )
+
+    def signed(value: float) -> str:
+        return f"{value:+.1f}"
+
+    results: list[DecisionExplanationSet] = []
+    for profile in frontier.profiles:
+        selected = tuple(fact for fact in facts if fact.profile == profile.name)
+        by_id = {fact.id: fact for fact in selected}
+        return_fact = by_id[f"{profile.name}.{baseline}.expected_return_change"]
+        volatility_fact = by_id[f"{profile.name}.{baseline}.volatility_change"]
+
+        def movement(value: float, noun: str) -> str:
+            if abs(value) < 0.1:
+                return f"estimated annual {noun} is effectively unchanged"
+            direction = "higher" if value > 0 else "lower"
+            return f"estimated annual {noun} is {abs(value):.1f} percentage points {direction}"
+
+        summary = (
+            f"Compared with {baseline_label}, {movement(return_fact.value, 'return')} and "
+            f"{movement(volatility_fact.value, 'volatility')}."
+        )
+        candidates: list[tuple[int, float, DecisionReason]] = []
+        candidates.append(
+            (
+                20,
+                max(abs(return_fact.value), abs(volatility_fact.value)),
+                DecisionReason(
+                    f"{profile.name}.trade_off",
+                    "trade_off",
+                    "The recommendation makes an explicit return–risk trade-off",
+                    f"Versus {baseline_label}: {movement(return_fact.value, 'return')} "
+                    f"and {movement(volatility_fact.value, 'volatility')}. "
+                    "These are estimates, not guarantees.",
+                    (return_fact.id, volatility_fact.id),
+                ),
+            )
+        )
+        caps = tuple(fact for fact in selected if fact.kind == "binding_cap")
+        if caps:
+            names = ", ".join(fact.subject for fact in caps[:3])
+            extra = f" and {len(caps) - 3} more" if len(caps) > 3 else ""
+            candidates.append(
+                (
+                    5,
+                    max(fact.value for fact in caps),
+                    DecisionReason(
+                        f"{profile.name}.binding_caps",
+                        "constraint",
+                        "The weight limit changes what is feasible",
+                        f"{names}{extra} reach the configured maximum weight. The model "
+                        "cannot allocate more to them even when the joint return–risk "
+                        "calculation would otherwise do so.",
+                        tuple(fact.id for fact in caps),
+                    ),
+                )
+            )
+        equivalents = tuple(fact for fact in selected if fact.kind == "equivalent_profile")
+        if equivalents:
+            candidates.append(
+                (
+                    4,
+                    1.0,
+                    DecisionReason(
+                        f"{profile.name}.equivalent_profiles",
+                        "constraint",
+                        "Some preference choices lead to the same portfolio",
+                        "The available assets and constraints collapse this profile onto "
+                        + ", ".join(str(fact.comparison) for fact in equivalents)
+                        + ". No artificial difference is shown.",
+                        tuple(fact.id for fact in equivalents),
+                    ),
+                )
+            )
+        changes = sorted(
+            (
+                fact
+                for fact in selected
+                if fact.kind == "allocation_change"
+                and fact.comparison == baseline
+                and abs(fact.value) >= 0.5
+            ),
+            key=lambda fact: (-abs(fact.value), fact.id),
+        )[:2]
+        for change in changes:
+            evidence = [change.id]
+            return_evidence = by_id.get(f"{profile.name}.{change.subject}.asset_expected_return")
+            risk_change = by_id.get(f"{profile.name}.{change.subject}.risk_contribution_change")
+            baseline_risk_fact = by_id.get(
+                f"{profile.name}.{baseline}.{change.subject}.risk_contribution"
+            )
+            selected_risk_fact = by_id.get(f"{profile.name}.{change.subject}.risk_contribution")
+            context: list[str] = []
+            if return_evidence:
+                evidence.append(return_evidence.id)
+                context.append(
+                    f"its model estimate is {100 * return_evidence.value:.1f}% annual return"
+                )
+            if (
+                risk_change
+                and baseline_risk_fact
+                and selected_risk_fact
+                and abs(risk_change.value) >= 0.5
+            ):
+                evidence.extend((baseline_risk_fact.id, selected_risk_fact.id, risk_change.id))
+                context.append(
+                    "its share of modeled risk moves from "
+                    f"{100 * baseline_risk_fact.value:.1f}% to "
+                    f"{100 * selected_risk_fact.value:.1f}%"
+                )
+            suffix = "; ".join(context)
+            candidates.append(
+                (
+                    30,
+                    abs(change.value),
+                    DecisionReason(
+                        f"{profile.name}.{change.subject}.allocation",
+                        "allocation",
+                        f"{change.subject} is {'increased' if change.value > 0 else 'reduced'}",
+                        f"Its target weight changes by {signed(change.value)} percentage "
+                        f"points versus {baseline_label}"
+                        + (f"; {suffix}" if suffix else "")
+                        + ". These facts put the shift in context; the allocation itself comes "
+                        "from the profile target and the assets' joint expected returns and "
+                        "covariances.",
+                        tuple(evidence),
+                    ),
+                )
+            )
+        concentration = by_id.get(f"{profile.name}.{baseline}.concentration_change")
+        if concentration and abs(concentration.value) >= 0.01:
+            candidates.append(
+                (
+                    40,
+                    abs(concentration.value),
+                    DecisionReason(
+                        f"{profile.name}.concentration_change",
+                        "diversification",
+                        "Holdings become "
+                        f"{'more' if concentration.value > 0 else 'less'} concentrated",
+                        "The HHI concentration measure changes by "
+                        f"{concentration.value:+.3f} versus {baseline_label}; higher HHI "
+                        "means weights are concentrated in fewer names.",
+                        (concentration.id,),
+                    ),
+                )
+            )
+        largest = next(fact for fact in selected if fact.kind == "largest_holding")
+        candidates.extend(
+            (
+                (
+                    80,
+                    largest.value,
+                    DecisionReason(
+                        f"{profile.name}.largest_holding_context",
+                        "diversification",
+                        "The largest target holding remains visible",
+                        f"{largest.subject} is the largest position at "
+                        f"{100 * largest.value:.1f}% of the portfolio.",
+                        (largest.id,),
+                    ),
+                ),
+                (
+                    90,
+                    0.0,
+                    DecisionReason(
+                        f"{profile.name}.model_basis",
+                        "model",
+                        "The result depends on an estimated model",
+                        f"The {estimator_name} expected-return signal and historical "
+                        "covariance are used together. Costs, taxes, turnover and guaranteed "
+                        "outcomes are not modeled.",
+                        (),
+                    ),
+                ),
+            )
+        )
+        ordered = sorted(candidates, key=lambda item: (item[0], -item[1], item[2].id))
+        reasons = tuple(item[2] for item in ordered[:5])
+        if len(reasons) < 3:
+            raise RuntimeError("explanation rules must produce at least three reasons")
+        results.append(
+            DecisionExplanationSet(
+                profile.name,
+                baseline,
+                "decision-explanations-v1",
+                summary,
+                reasons,
+            )
+        )
+    return tuple(results)
 
 
 class PortfolioFrontierService:
@@ -191,7 +520,7 @@ class PortfolioFrontierService:
         """Stable cache identity for the configured model and profile implementations."""
         return repr(
             (
-                "frontier-report-v3",
+                "frontier-report-v4",
                 self._estimators.identity("historical_mean"),
                 self._estimators.identity("simple_forecast"),
                 self._profiles,
@@ -371,11 +700,15 @@ class PortfolioFrontierService:
             ),
         )
         total: Decimal | None = None
+        current: ReferencePortfolio | None = None
         if normalized:
             values = tuple(quantity * aligned[asset][-1] for asset, quantity in normalized)
             total = sum(values, Decimal(0))
-            current = PortfolioWeights(asset_ids, tuple(float(value / total) for value in values))
-            references = (reference("current", current, signal, risk), *references)
+            current_weights = PortfolioWeights(
+                asset_ids, tuple(float(value / total) for value in values)
+            )
+            current = reference("current", current_weights, signal, risk)
+            references = (current, *references)
         comparison = ExpectedReturnComparison(
             expected_return_estimator,
             pair,
@@ -420,8 +753,13 @@ class PortfolioFrontierService:
             "No missing-value imputation; timestamp-intersection alignment is used.",
             "Current S&P 500 membership is used; survivorship bias applies.",
         )
+        facts, fact_diagnostics = decision_facts(frontier, references, signal, risk)
+        baseline_id: Literal["current", "equal_weight"] = (
+            "current" if current is not None else "equal_weight"
+        )
+        explanations = decision_explanations(frontier, facts, baseline_id, signal.estimator_name)
         report = FrontierReport(
-            AnalysisWindow(
+            window=AnalysisWindow(
                 requested_start,
                 requested_end,
                 dates[0],
@@ -430,30 +768,32 @@ class PortfolioFrontierService:
                 len(dates) - 1,
                 excluded,
             ),
-            frontier,
-            references,
-            decision_facts(frontier, references),
-            signal,
-            risk,
-            benchmark_signal,
-            benchmark_risk,
-            constraints,
-            self._profiles,
-            conventions,
-            universe.universe.as_of_date,
-            universe.provenance,
-            history.provenance,
-            assumptions,
-            (
+            frontier=frontier,
+            references=references,
+            facts=facts,
+            explanations=explanations,
+            expected_return_model=signal,
+            risk_model=risk,
+            benchmark_expected_return_model=benchmark_signal,
+            benchmark_risk_model=benchmark_risk,
+            constraints=constraints,
+            profile_configuration=self._profiles,
+            conventions=conventions,
+            universe_as_of=universe.universe.as_of_date,
+            universe_provenance=universe.provenance,
+            price_provenance=history.provenance,
+            assumptions=assumptions,
+            diagnostics=(
                 *signal.diagnostics,
                 *risk.diagnostics,
                 *benchmark_signal.diagnostics,
                 *benchmark_risk.diagnostics,
                 *frontier.diagnostics,
+                *fact_diagnostics,
             ),
-            "",
-            total,
-            comparison,
+            report_hash="",
+            holdings_capital=total,
+            expected_return_comparison=comparison,
         )
         stable = asdict(report)
         for key in ("universe_provenance", "price_provenance"):

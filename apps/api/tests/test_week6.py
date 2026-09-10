@@ -78,7 +78,10 @@ def test_shared_snapshot_capital_and_cache(tmp_path: Path) -> None:
     assert first.model == second.model
     assert first.report_hash != second.report_hash
     assert {r.id for r in model.report.references} == {"equal_weight", "sp500_proxy"}
-    assert not any(f.kind == "allocation_change" for f in model.report.facts)
+    assert all(
+        f.comparison == "equal_weight" for f in model.report.facts if f.kind == "allocation_change"
+    )
+    assert all(item.baseline == "equal_weight" for item in model.report.explanations)
     assert (
         model.report.expected_return_model.observations
         == model.report.benchmark_expected_return_model.observations

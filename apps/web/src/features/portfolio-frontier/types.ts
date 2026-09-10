@@ -15,9 +15,19 @@ export type ReferencePortfolio = {
 };
 export type DecisionFact = {
   id: string; profile: ProfileName;
-  kind: "expected_return_change" | "volatility_change" | "allocation_change" | "largest_holding" | "concentration" | "binding_cap";
+  kind: "expected_return_change" | "volatility_change" | "allocation_change" | "largest_holding" |
+    "concentration" | "concentration_change" | "binding_cap" | "asset_expected_return" |
+    "risk_contribution" | "risk_contribution_change" | "equivalent_profile";
   subject: string; comparison: string | null; value: number;
-  unit: "percentage_points" | "weight_fraction" | "hhi";
+  unit: "percentage_points" | "weight_fraction" | "annual_fraction" | "hhi" | "flag";
+};
+export type DecisionReason = {
+  id: string; category: "trade_off" | "allocation" | "diversification" | "constraint" | "model";
+  headline: string; detail: string; evidence_fact_ids: string[];
+};
+export type DecisionExplanationSet = {
+  profile: ProfileName; baseline: "current" | "equal_weight"; rule_version: string;
+  summary: string; reasons: DecisionReason[];
 };
 type ModelMetadata = {
   asset_ids: string[]; frequency: "daily"; return_convention: "simple"; annualization_periods: number;
@@ -32,7 +42,7 @@ export type FrontierReport = {
   window: { requested_start: string; requested_end: string; effective_start: string; effective_end: string;
     aligned_price_observations: number; return_observations: number; excluded_observations: [string, number][] };
   frontier: { points: FrontierPoint[]; profiles: ProfileReference[]; diagnostics: string[] };
-  references: ReferencePortfolio[]; facts: DecisionFact[];
+  references: ReferencePortfolio[]; facts: DecisionFact[]; explanations: DecisionExplanationSet[];
   expected_return_model: ReturnModel; risk_model: RiskModel;
   benchmark_expected_return_model: ReturnModel; benchmark_risk_model: RiskModel;
   constraints: { max_weight: number | null };

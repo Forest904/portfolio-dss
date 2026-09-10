@@ -36,6 +36,10 @@ export function SimulationResults({ report, selected, capital, stale = false }: 
     controller.current?.abort(); const version = ++revision.current;
     setError("");
     if (!capital) { setError("Refresh the recommendation to obtain its starting capital."); return; }
+    if (![1, 3, 5].includes(settings.horizon_years) || ![1000, 10000, 50000].includes(settings.paths) || !Number.isInteger(settings.seed) || settings.seed < 0 || settings.seed > 4294967295) {
+      setError("Choose a supported horizon and path count, and enter a whole-number seed from 0 to 4,294,967,295.");
+      return;
+    }
     const cached = cache.current.get(key);
     if (cached) { setResult(cached); setResultKey(key); setLoading(false); return; }
     const active = new AbortController(); controller.current = active; setLoading(true);
@@ -59,7 +63,7 @@ export function SimulationResults({ report, selected, capital, stale = false }: 
     <p>Return model: {report.expected_return_comparison ? estimatorLabels[report.expected_return_comparison.selected_estimator] : "Historical mean"}. Historical covariance estimates risk. The selected mean is held constant over the simulation horizon.</p>
     {stale && <p role="status">Simulation is stale because the estimator changed. Recalculate the recommendation first.</p>}
     <p>Simulated outcomes are not guaranteed. This model continuously maintains portfolio weights, including current holdings, with constant estimated return and volatility.</p>
-    {!opened ? <button disabled={stale} className="secondary-button" onClick={() => { setOpened(true); void run(); }}>Explore uncertainty</button> : <>
+    {!opened ? <div className="empty-state"><strong>Simulation not run</strong><p>Run it to compare ranges of possible outcomes; it will not replace the recommendation.</p><button disabled={stale} className="secondary-button" onClick={() => { setOpened(true); void run(); }}>Explore uncertainty</button></div> : <>
       <form className="simulation-controls" onSubmit={(event) => { event.preventDefault(); void run(); }}>
         <label>Simulation horizon<select value={settings.horizon_years} onChange={(e) => changeSettings({ ...settings, horizon_years: Number(e.target.value) })}>
           {[1, 3, 5].map((n) => <option key={n} value={n}>{n} {n === 1 ? "year" : "years"}</option>)}</select></label>
@@ -92,9 +96,13 @@ function SimulationCharts({ result, selected, comparator }: { result: Simulation
   const pair = [result.portfolios.find((p) => p.id === selected)!, result.portfolios.find((p) => p.id === comparator)!];
   const years = result.scenario.configuration.horizon_years;
   const maximum = Math.max(...pair.flatMap((p) => p.fan.map((f) => f.percentiles[4]))) * 1.05;
+  const medianDifference = pair[0].terminal_value.percentiles[2] - pair[1].terminal_value.percentiles[2];
+  const downsideDifference = pair[0].terminal_value.percentiles[0] - pair[1].terminal_value.percentiles[0];
+  const lossDifference = pair[0].probability_of_loss - pair[1].probability_of_loss;
   return <div className="simulation-output">
     <p>Starting capital: {usd.format(result.scenario.initial_capital)} USD for each portfolio. Horizon: {years} {years === 1 ? "year" : "years"}; {result.scenario.configuration.paths.toLocaleString("en-US")} paths; seed {result.scenario.configuration.seed}.</p>
     <p className="fine-print">Nominal USD, dividends reinvested, no cash flows, costs, taxes or inflation. The bands show pointwise simulated outcomes, not individual paths or uncertainty in estimated parameters.</p>
+    <aside className="simulation-takeaway"><strong>What this comparison says:</strong> The selected portfolio&apos;s median terminal value is {usd.format(Math.abs(medianDifference))} {medianDifference >= 0 ? "higher" : "lower"}; its P5 downside outcome is {usd.format(Math.abs(downsideDifference))} {downsideDifference >= 0 ? "higher" : "lower"}; and its modeled loss probability is {pct.format(Math.abs(lossDifference))} {lossDifference >= 0 ? "higher" : "lower"} than {names[comparator]}. These are marginal simulated estimates, not odds of outperforming.</aside>
     <div className="simulation-fans">{pair.map((p, i) => <Fan key={p.id} portfolio={p} maximum={maximum} years={years} color={i === 0 ? "#236449" : "#426a8c"} />)}</div>
     <Histogram pair={pair} edges={result.histogram_edges} years={years} paths={result.scenario.configuration.paths} />
     <p>Loss means finishing below starting nominal capital at {years} {years === 1 ? "year" : "years"}, not a temporary drawdown. These are marginal distributions; no probability of one portfolio beating another is calculated.</p>

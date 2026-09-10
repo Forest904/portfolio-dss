@@ -74,6 +74,23 @@ describe("PortfolioAnalysisWorkspace", () => {
     expect(screen.queryByLabelText("Ticker 3")).not.toBeInTheDocument();
   });
 
+  it("reports duplicate holdings and infeasible caps before fetching", () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    render(<PortfolioAnalysisWorkspace />);
+    fireEvent.change(screen.getByLabelText("Ticker 2"), { target: { value: "AAPL" } });
+    fireEvent.click(screen.getByRole("button", { name: "Analyze portfolio" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Each ticker can appear only once");
+    expect(screen.getByLabelText("Ticker 1")).toHaveAttribute("aria-invalid", "true");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Ticker 2"), { target: { value: "MSFT" } });
+    fireEvent.change(screen.getByLabelText("Maximum weight per stock (%)"), { target: { value: "40" } });
+    fireEvent.click(screen.getByRole("button", { name: "Compare alternatives" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("cannot fully allocate");
+    expect(screen.getByLabelText("Maximum weight per stock (%)")).toHaveAttribute("aria-invalid", "true");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("submits positions and renders labelled historical results", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify(report), { status: 200, headers: { "Content-Type": "application/json" } }),

@@ -14,7 +14,12 @@ from app.api.schemas import (
     PositionRequest,
 )
 from app.application.estimators import EstimatorId, ExpectedReturnComparison
-from app.application.frontier import DecisionFact, PortfolioFrontierService, ReferencePortfolio
+from app.application.frontier import (
+    DecisionExplanationSet,
+    DecisionFact,
+    PortfolioFrontierService,
+    ReferencePortfolio,
+)
 from app.domain.analysis import AnalysisWindow
 from app.domain.conventions import FinancialConventions
 from app.domain.frontier import FrontierResult, ProfileConfiguration
@@ -37,6 +42,7 @@ class PortfolioFrontierResponse(ApiModel):
     frontier: FrontierResult
     references: tuple[ReferencePortfolio, ...]
     facts: tuple[DecisionFact, ...]
+    explanations: tuple[DecisionExplanationSet, ...]
     expected_return_model: ExpectedReturnSignal
     risk_model: RiskEstimate
     benchmark_expected_return_model: ExpectedReturnSignal
