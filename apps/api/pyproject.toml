@@ -4,6 +4,7 @@ version = "0.4.0"
 description = "FastAPI backend for the Portfolio Decision Support System"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "matplotlib>=3.10,<4.0",
     "numpy>=2.3,<3.0",
     "beautifulsoup4>=4.13,<5.0",
     "fastapi>=0.116,<1.0",

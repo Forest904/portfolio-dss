@@ -90,6 +90,22 @@ fallback. The cache is a performance/reproducibility aid, not the source of busi
 
 ## Reproducibility
 
+### Walk-forward snapshots (Week 9)
+
+Backtesting freezes normalized prices and current constituent metadata with provider provenance
+and a snapshot SHA-256 hash; replay validates the snapshot and requires no provider calls.
+Unlike analysis timestamp-intersection alignment, every basket asset must have every SPY session
+in the configured history, including warm-up. Missing or extra asset sessions fail the comparison;
+no values are filled and no dates are dropped. SPY is the calendar source, so a date missing from
+all series cannot be detected without an independent exchange calendar.
+
+The checked-in demonstration snapshot and report are under `examples/backtest/week9/`.
+The warm-up begins 2017-12-28 to provide 253 prices before the first 2019 execution. Current
+membership and revised adjusted prices are disclosed limitations, not point-in-time data claims.
+See ADR 0013 and the example README for offline replay and acquisition commands.
+
+### Analysis provenance
+
 Every generated analysis should be traceable to:
 
 - universe version/as-of date;

@@ -285,3 +285,66 @@ concurrency test, the 16 Week 8 tests, and a subsequent full 170-test run passed
 diagnostic. Its cause was not established; no native-library fix is claimed. Track recurrence
 during Windows hardening in Week 11. Backend formatting checks also pass; one pre-existing
 formatting discrepancy in the Week 5 test was normalized to satisfy CI.
+
+## Week 9 acceptance evidence — 2026-09-10
+
+Backend validation from `apps/api`:
+
+```powershell
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy
+uv run pytest -q
+```
+
+Lint, formatting and strict typing passed (79 Python files). The full backend suite passed:
+**209 tests**, including 39 new backtesting tests, in 19.30 seconds. Two existing
+Starlette/httpx/AnyIO deprecation warnings remain; no native-library diagnostic occurred in this
+run. The final allocation-table presentation improvement was followed by another successful
+lint/type check and all 13 CLI/report integration tests (4.54 seconds).
+
+Numerical tests cover hand-calculated drifting holdings, rebalance-before-next-return timing,
+SPY buy-and-hold and equal-weight resets, geometric annualization, drawdowns, exact training
+boundaries, the first warm-up and partial final intervals. Spy estimators/optimizers verify past-only
+inputs. Execution-day/future price perturbations leave decisions through that execution unchanged;
+appending observations preserves earlier decisions and daily accounting even when the original
+end falls on a rebalance date. Other cases cover six comparable series, long-only/budget/cap
+constraints, single-asset flat markets, invalid configuration/prices/dates, insufficient history,
+missing stock/SPY dates, unknown constituents, hash tampering and contextual solver failure.
+
+CLI tests disable socket network access, replay twice, and compare HTML and JSON bytes. The
+frozen real-market demo is independently replayed twice with identical canonical domain results;
+published terminal values are checked with relative tolerance `1e-6` for platform/solver variance.
+HTML tests compare displayed metrics with numerical results and verify inline plots, all decision
+records, assumptions and absence of externally loaded assets. Report content hashes are verified.
+
+### Frozen demonstration
+
+`examples/backtest/week9/` contains the real Yahoo adjusted-price snapshot with current Wikipedia
+constituent provenance, explicit configuration and the generated HTML/JSON report. All six series
+start at USD 10,000 on **2019-01-02** and end on **2025-12-31**, covering **1,759 returns**.
+Each optimized strategy and equal weight has 84 allocation records; SPY has one.
+
+- Snapshot SHA-256: `aadbf5efb4601f4cd75ebe9210b9a988339912f6309a718dfe7f5d30ef4a8754`
+- Report SHA-256: `eada8c9de07dab467cee7c1042859346bdc1ff7a50d87e9cca2cea80589be8f0`
+
+The snapshot has 251 SPY observations in 2018. Warm-up therefore starts on 2017-12-28, retaining
+the full 252-return training requirement and original evaluation dates. No basket selection or
+parameter tuning was performed using the comparison results. See ADR 0013 for limitations.
+
+### Browser acceptance
+
+Inspected the generated standalone HTML through a local static server using Playwright/Chrome
+at 1440×1100 and 390×844. Desktop comparison values, equity and drawdown plots, date axes,
+units and legends are readable. Opened the historical rolling strategy and first execution record;
+training ends 2018-12-31 before execution 2019-01-02. The final mobile audit table shows target
+percentages and annual estimated means with full numerical records behind an additional expander.
+At 390 px viewport width the document width is 390 px. The performance table is independently
+scrollable (332 px viewport, 929 px content); keyboard ArrowRight moved it by 40 px.
+
+Screenshots inspected under ignored `output/playwright/`: `week9-desktop.png`, `week9-equity.png`,
+`week9-drawdown.png`, `week9-mobile-table.png`, and `week9-mobile-audit.png`. A headed Chrome
+launch failed, so acceptance used headless Chrome screenshots. The CLI blocks file URLs, so a
+local HTTP server served the unchanged report. Its sole browser console error was an unrelated
+favicon 404; no external report assets or application calls were needed. Mobile testing used a
+narrow browser viewport, not physical mobile hardware.

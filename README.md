@@ -59,6 +59,14 @@ annualized return/volatility, covariance/correlation, holding and sector concent
 comparisons, diagnostics, provenance, and a deterministic analysis hash. The web app provides the
 corresponding interactive analysis form and progressively disclosed results.
 
+## Week 9 walk-forward backtesting
+
+The offline CLI compares historical and forecast optimization under rolling/expanding training,
+periodically rebalanced equal weight, and SPY buy-and-hold on one frozen historical period.
+Open the [standalone backtest report](examples/backtest/week9/report/report.html) or follow the
+[replay and snapshot commands](examples/backtest/week9/README.md). The API and web app are not
+required. See [ADR 0013](docs/adr/0013-walk-forward-backtesting.md) for execution timing and limitations.
+
 ## Prerequisites
 
 - Python 3.12

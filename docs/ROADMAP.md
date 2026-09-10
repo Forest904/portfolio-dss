@@ -175,6 +175,12 @@ Exit criteria:
 
 **Goal:** evaluate decisions out of sample.
 
+**State:** complete. The offline snapshot/replay CLI, rolling and expanding strategies,
+strict execution timing, and self-contained HTML/JSON report are implemented. The frozen
+2019–2025 comparison includes all six series on 1,759 identical evaluation returns. Backend
+checks and desktop/mobile report inspection passed on 2026-09-10; see ADR 0013,
+`docs/TESTING.md`, and `examples/backtest/week9/README.md`.
+
 Deliverables:
 
 - `BacktestEngine`;

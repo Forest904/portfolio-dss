@@ -1,0 +1,13 @@
+{
+  "tickers": ["AAPL", "MSFT", "JPM", "JNJ", "XOM"],
+  "history_start": "2017-12-28",
+  "history_end": "2025-12-31",
+  "evaluation_start": "2019-01-01",
+  "evaluation_end": "2025-12-31",
+  "window_modes": ["rolling", "expanding"],
+  "training_returns": 252,
+  "rebalance_sessions": 21,
+  "initial_capital": 10000.0,
+  "risk_aversion": 3.0,
+  "max_weight": 0.4
+}
