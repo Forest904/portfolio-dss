@@ -23,10 +23,11 @@ type ModelMetadata = {
   asset_ids: string[]; frequency: "daily"; return_convention: "simple"; annualization_periods: number;
   estimation_start: string; estimation_end: string; observations: number; estimator_name: string; diagnostics: string[];
 };
-type ReturnModel = ModelMetadata & { expected_returns: number[] };
+export type ReturnModel = ModelMetadata & { expected_returns: number[] };
 type RiskModel = ModelMetadata & { covariance_matrix: number[][]; missing_data_policy: "no_imputation" };
 type Provenance = { provider: string; retrieved_at: string; content_hash: string; stale_fallback: boolean };
 export type FrontierReport = {
+  expected_return_comparison?: import("../expected-returns/types").ExpectedReturnComparison | null;
   holdings_capital: string | null;
   window: { requested_start: string; requested_end: string; effective_start: string; effective_end: string;
     aligned_price_observations: number; return_observations: number; excluded_observations: [string, number][] };

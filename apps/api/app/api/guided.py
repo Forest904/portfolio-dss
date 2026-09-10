@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request
 from pydantic import field_validator
 
 from app.api.schemas import ApiModel, ErrorResponse
+from app.application.estimators import EstimatorId
 from app.application.guided import GuidedReport
 from app.application.guided_jobs import GuidedJobs, JobFailure
 from app.domain.guided import PreferenceAnswers, map_preferences, validate_capital
@@ -15,6 +16,7 @@ router = APIRouter()
 
 
 class GuidedRequest(ApiModel):
+    expected_return_estimator: EstimatorId = "historical_mean"
     version: Literal["guided-preferences-v1"]
     answers: PreferenceAnswers
     capital: Decimal
@@ -55,7 +57,11 @@ class GuidedJobResponse(ApiModel):
 def submit_guided(payload: GuidedRequest, request: Request) -> AcceptedJob:
     jobs: GuidedJobs = request.app.state.guided_jobs
     return AcceptedJob(
-        id=jobs.submit(map_preferences(payload.answers, payload.version), payload.capital)
+        id=jobs.submit(
+            map_preferences(payload.answers, payload.version),
+            payload.capital,
+            payload.expected_return_estimator,
+        )
     )
 
 

@@ -67,3 +67,12 @@ Portfolio-level simulation remains inexpensive for the full-universe guided buil
 consume future compatible estimator outputs without changing the optimizer. Display the modeling
 limitations beside results and expose full assumptions and replay metadata in advanced details.
 Desktop/mobile visual acceptance remains required before marking Week 7 complete.
+
+## Week 8 extension
+
+ADR 0012 adds a selectable exponentially weighted return mean. Simulation scenarios now carry
+the selected estimator name and portfolio mean from the displayed report; historical covariance
+still supplies variance. The simulation engine and numerical contract are unchanged. Holding a
+forecast-derived mean constant over 1/3/5 years is an explicit modeling assumption, not validated
+predictive accuracy. Changing the estimator requires recalculating the recommendation before
+running simulations.

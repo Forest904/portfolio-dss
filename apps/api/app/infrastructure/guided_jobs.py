@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, BinaryIO, cast
 from uuid import uuid4
 
 from app.application.errors import ApplicationError, not_found
+from app.application.estimators import BUILTIN_CONFIGURATION, EstimatorId
 from app.application.guided import GuidedModel, GuidedRecommendationService, personalize
 from app.application.guided_jobs import GuidedJob, JobFailure
 from app.domain.guided import PreferenceAnswers, PreferenceResult, map_preferences
@@ -71,6 +72,31 @@ class SQLiteGuidedRepository:
                 db.execute("PRAGMA user_version=1")
                 db.commit()
 
+            if db.execute("PRAGMA user_version").fetchone()[0] < 2:
+                db.execute("BEGIN IMMEDIATE")
+                db.execute(
+                    "ALTER TABLE guided_runs ADD COLUMN estimator TEXT NOT NULL "
+                    "DEFAULT 'historical_mean'"
+                )
+                db.execute("DELETE FROM guided_models")
+                db.execute(
+                    "UPDATE guided_runs SET model=NULL, stage='failed', error=? "
+                    "WHERE model IS NOT NULL",
+                    (
+                        json.dumps(
+                            asdict(
+                                JobFailure(
+                                    "REPORT_VERSION_CHANGED",
+                                    "This cached report predates the forecast update. "
+                                    "Please recalculate.",
+                                )
+                            )
+                        ),
+                    ),
+                )
+                db.execute("PRAGMA user_version=2")
+                db.commit()
+
     def recover(self) -> None:
         with closing(self.connect()) as db:
             db.execute(
@@ -89,7 +115,14 @@ class SQLiteGuidedRepository:
             )
             db.commit()
 
-    def submit(self, key: str, preference: PreferenceResult, capital: Decimal) -> str:
+    def submit(
+        self,
+        key: str,
+        preference: PreferenceResult,
+        capital: Decimal,
+        expected_return_estimator: EstimatorId = "historical_mean",
+    ) -> str:
+        key = f"{key}:{BUILTIN_CONFIGURATION}:{expected_return_estimator}"
         now, job_id = self.clock(), uuid4().hex
         with closing(self.connect()) as db:
             db.execute("BEGIN IMMEDIATE")
@@ -107,7 +140,8 @@ class SQLiteGuidedRepository:
             run_id = run["id"] if run else uuid4().hex
             if run is None:
                 db.execute(
-                    "INSERT INTO guided_runs VALUES (?,?,?,'queued',NULL,NULL)", (run_id, key, now)
+                    "INSERT INTO guided_runs VALUES (?,?,?,'queued',NULL,NULL,?)",
+                    (run_id, key, now, expected_return_estimator),
                 )
             db.execute(
                 "INSERT INTO guided_jobs VALUES (?,?,?,?,?)",
@@ -115,6 +149,13 @@ class SQLiteGuidedRepository:
             )
             db.commit()
         return job_id
+
+    def estimator(self, run_id: str) -> EstimatorId:
+        with closing(self.connect()) as db:
+            row = db.execute("SELECT estimator FROM guided_runs WHERE id=?", (run_id,)).fetchone()
+        if row is None or row["estimator"] not in ("historical_mean", "simple_forecast"):
+            raise ValueError("Invalid persisted estimator")
+        return cast(EstimatorId, row["estimator"])
 
     def next_run(self) -> str | None:
         with closing(self.connect()) as db:
@@ -233,8 +274,7 @@ class ProductionGuidedFactory:
             BoundedBulkHistoryProvider(prices),
             frontier,
             cache=repository,
-            configuration_key=repr(runtime.frontier_profiles)
-            + "historical-mean-sample-covariance-scipy-v1",
+            configuration_key=repr(runtime.frontier_profiles) + frontier.configuration_signature,
         )
 
 
@@ -244,7 +284,9 @@ GuidedFactory = Callable[[SQLiteGuidedRepository], GuidedRecommendationService]
 def calculate_worker(path: Path, run_id: str, factory: GuidedFactory) -> None:
     repository = SQLiteGuidedRepository(path)
     try:
-        model = factory(repository).calculate(lambda stage: repository.stage(run_id, stage))
+        model = factory(repository).calculate(
+            lambda stage: repository.stage(run_id, stage), repository.estimator(run_id)
+        )
         repository.finish(run_id, model)
     except ApplicationError as exc:
         repository.fail(run_id, JobFailure(exc.code, exc.message))
@@ -274,7 +316,7 @@ class ProcessGuidedJobs:
         self._lease: BinaryIO | None = None
 
     def start(self) -> None:
-        self.repository.initialize()
+        self.repository.path.parent.mkdir(parents=True, exist_ok=True)
         lease = self.repository.path.with_suffix(".worker.lock").open("a+b")
         if lease.tell() == 0:
             lease.write(b"0")
@@ -293,7 +335,13 @@ class ProcessGuidedJobs:
             lease.close()
             raise RuntimeError("Guided jobs require one API process per job database") from None
         self._lease = lease
-        self.repository.recover()
+        try:
+            self.repository.initialize()
+            self.repository.recover()
+        except Exception:
+            lease.close()
+            self._lease = None
+            raise
         self._stop.clear()
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
@@ -306,8 +354,15 @@ class ProcessGuidedJobs:
             self._lease.close()
             self._lease = None
 
-    def submit(self, preference: PreferenceResult, capital: Decimal) -> str:
-        return self.repository.submit(self.request_key(), preference, capital)
+    def submit(
+        self,
+        preference: PreferenceResult,
+        capital: Decimal,
+        expected_return_estimator: EstimatorId = "historical_mean",
+    ) -> str:
+        return self.repository.submit(
+            self.request_key(), preference, capital, expected_return_estimator
+        )
 
     def get(self, job_id: str) -> GuidedJob:
         return self.repository.get(job_id)

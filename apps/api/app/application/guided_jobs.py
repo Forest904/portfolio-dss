@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Protocol
 
+from app.application.estimators import EstimatorId
 from app.application.guided import GuidedReport
 from app.domain.guided import PreferenceResult
 
@@ -25,5 +26,10 @@ class GuidedJob:
 
 
 class GuidedJobs(Protocol):
-    def submit(self, preference: PreferenceResult, capital: Decimal) -> str: ...
+    def submit(
+        self,
+        preference: PreferenceResult,
+        capital: Decimal,
+        expected_return_estimator: EstimatorId = "historical_mean",
+    ) -> str: ...
     def get(self, job_id: str) -> GuidedJob: ...

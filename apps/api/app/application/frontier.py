@@ -11,6 +11,12 @@ from typing import Literal
 
 from app.application.analysis import align_price_history, subtract_calendar_years
 from app.application.errors import data_unavailable, invalid_input, optimization_failed
+from app.application.estimators import (
+    EstimatorId,
+    EstimatorRegistry,
+    ExpectedReturnComparison,
+    compare_weights,
+)
 from app.application.valuation import (
     NEW_YORK,
     latest_completed_session_ceiling,
@@ -93,6 +99,7 @@ class FrontierReport:
     diagnostics: tuple[str, ...]
     report_hash: str
     holdings_capital: Decimal | None = None
+    expected_return_comparison: ExpectedReturnComparison | None = None
 
 
 def decision_facts(
@@ -184,7 +191,9 @@ class PortfolioFrontierService:
         """Stable cache identity for the configured model and profile implementations."""
         return repr(
             (
-                "frontier-report-v2",
+                "frontier-report-v3",
+                self._estimators.identity("historical_mean"),
+                self._estimators.identity("simple_forecast"),
                 self._profiles,
                 type(self._returns).__module__,
                 type(self._returns).__qualname__,
@@ -204,12 +213,14 @@ class PortfolioFrontierService:
         generator: EfficientFrontierGenerator,
         *,
         profiles: ProfileConfiguration | None = None,
+        estimator_registry: EstimatorRegistry | None = None,
         clock: Callable[[], datetime] | None = None,
         maximum_consecutive_missing: int = 5,
     ) -> None:
         self._universe = universe_provider
         self._prices = market_data_provider
         self._returns = expected_return_estimator
+        self._estimators = estimator_registry or EstimatorRegistry(expected_return_estimator)
         self._risk = risk_estimator
         self._generator = generator
         self._profiles = profiles or ProfileConfiguration()
@@ -223,6 +234,7 @@ class PortfolioFrontierService:
         max_weight: float | None = None,
         start: date | None = None,
         end: date | None = None,
+        expected_return_estimator: EstimatorId = "historical_mean",
     ) -> FrontierReport:
         normalized = normalize_positions(positions)
         asset_ids = tuple(asset for asset, _ in normalized)
@@ -277,6 +289,7 @@ class PortfolioFrontierService:
             history,
             constraints,
             normalized,
+            expected_return_estimator=expected_return_estimator,
         )
 
     def build_report(
@@ -290,6 +303,8 @@ class PortfolioFrontierService:
         history: PriceHistory,
         constraints: OptimizationConstraints,
         normalized: Sequence[tuple[str, Decimal]] = (),
+        *,
+        expected_return_estimator: EstimatorId = "historical_mean",
     ) -> FrontierReport:
         """Calculate alternatives from one validated snapshot, with optional real holdings."""
         conventions = DEFAULT_FINANCIAL_CONVENTIONS
@@ -314,8 +329,11 @@ class PortfolioFrontierService:
             )
 
         selected_sample, benchmark_sample = sample(asset_ids), sample((benchmark_id,))
-        signal, risk = self._returns.estimate(selected_sample), self._risk.estimate(selected_sample)
-        benchmark_signal = self._returns.estimate(benchmark_sample)
+        pair = self._estimators.estimate(selected_sample)
+        benchmark_pair = self._estimators.estimate(benchmark_sample)
+        signal = pair.selected(expected_return_estimator)
+        risk = self._risk.estimate(selected_sample)
+        benchmark_signal = benchmark_pair.selected(expected_return_estimator)
         benchmark_risk = self._risk.estimate(benchmark_sample)
         try:
             frontier = self._generator.generate(
@@ -358,7 +376,26 @@ class PortfolioFrontierService:
             total = sum(values, Decimal(0))
             current = PortfolioWeights(asset_ids, tuple(float(value / total) for value in values))
             references = (reference("current", current, signal, risk), *references)
+        comparison = ExpectedReturnComparison(
+            expected_return_estimator,
+            pair,
+            benchmark_pair,
+            tuple(
+                compare_weights(r.id, r.weights, benchmark_pair if r.id == "sp500_proxy" else pair)
+                for r in references
+            )
+            + tuple(
+                compare_weights(
+                    p.name,
+                    next(point.weights for point in frontier.points if point.id == p.point_id),
+                    pair,
+                )
+                for p in frontier.profiles
+            ),
+        )
         assumptions = (
+            f"Allocation estimator: {signal.estimator_name}. "
+            "Forecast uses a constant future daily mean.",
             "Returns are estimated annual arithmetic means, "
             "not observed CAGR or guaranteed future returns.",
             "Volatility is estimated from historical sample covariance, "
@@ -416,6 +453,7 @@ class PortfolioFrontierService:
             ),
             "",
             total,
+            comparison,
         )
         stable = asdict(report)
         for key in ("universe_provenance", "price_provenance"):

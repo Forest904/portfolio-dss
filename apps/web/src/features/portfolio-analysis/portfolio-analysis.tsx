@@ -8,6 +8,9 @@ import type { FrontierReport } from "../portfolio-frontier/types";
 import { AnalysisResults } from "./analysis-results";
 import type { AnalysisError, PortfolioAnalysis } from "./types";
 
+import { EstimatorSelector } from "../expected-returns/estimator-selector";
+import type { EstimatorId } from "../expected-returns/types";
+
 type PositionInput = { id: number; ticker: string; quantity: string };
 
 export function PortfolioAnalysisWorkspace() {
@@ -16,6 +19,8 @@ export function PortfolioAnalysisWorkspace() {
     { id: 2, ticker: "MSFT", quantity: "4" },
   ]);
   const [nextId, setNextId] = useState(3);
+  const [estimator, setEstimator] = useState<EstimatorId>("historical_mean");
+  const [stale, setStale] = useState(false);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [report, setReport] = useState<PortfolioAnalysis | null>(null);
@@ -55,7 +60,7 @@ export function PortfolioAnalysisWorkspace() {
       const response = await fetch(mode === "frontier" ? "/api/portfolio-frontier" : "/api/portfolio-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ positions: positions.map(({ ticker, quantity }) => ({ ticker, quantity })), ...(history && { history }), ...(mode === "frontier" && maxWeight !== "" && { constraints: { max_weight: Number(maxWeight) / 100 } }) }),
+        body: JSON.stringify({ positions: positions.map(({ ticker, quantity }) => ({ ticker, quantity })), ...(history && { history }), ...(mode === "frontier" && { expected_return_estimator: estimator }), ...(mode === "frontier" && maxWeight !== "" && { constraints: { max_weight: Number(maxWeight) / 100 } }) }),
         signal: controller.current.signal,
       });
       const payload: unknown = await response.json();
@@ -64,7 +69,7 @@ export function PortfolioAnalysisWorkspace() {
         const candidate = payload as Partial<AnalysisError>;
         throw { code: candidate.code ?? (mode === "frontier" ? "FRONTIER_FAILED" : "ANALYSIS_FAILED"), message: candidate.message ?? (mode === "frontier" ? "The alternatives could not be calculated." : "The portfolio could not be analyzed.") } satisfies AnalysisError;
       }
-      if (mode === "frontier") setFrontier(payload as FrontierReport);
+      if (mode === "frontier") { setFrontier(payload as FrontierReport); setStale(false); }
       else setReport(payload as PortfolioAnalysis);
     } catch (reason) {
       if (version !== requestVersion.current) return;
@@ -91,16 +96,21 @@ export function PortfolioAnalysisWorkspace() {
         </fieldset>
         <fieldset><legend>History window <span>optional</span></legend><div className="date-row"><label>Start date <input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label>End date <input type="date" value={end} onChange={(event) => setEnd(event.target.value)} /></label></div><p className="fine-print">Blank dates use the latest completed session and the preceding three calendar years.</p></fieldset>
         <fieldset><legend>Alternative constraints <span>optional</span></legend><label>Maximum weight per stock (%) <input type="number" min="0.01" max="100" step="any" value={maxWeight} onChange={(event) => setMaxWeight(event.target.value)} /></label><p className="fine-print">Applies to decision alternatives. Blank means no additional cap. Weights must still total 100%.</p></fieldset>
+        <div onChange={(event) => event.stopPropagation()}><EstimatorSelector value={estimator} onChange={(value) => {
+          requestVersion.current++; controller.current?.abort(); setLoading(false); setError(null);
+          setEstimator(value); setStale(true);
+        }} /></div>
         <button className="secondary-button" disabled={loading} type="submit">{loading && view === "analysis" ? "Analyzing..." : "Analyze portfolio"}</button>
         <button className="primary-button" disabled={loading} type="submit" value="frontier">{loading && view === "frontier" ? "Comparing alternatives…" : "Compare alternatives"}</button>
         {error && <div role="alert" className="error-card"><strong>{error.code}</strong><span>{error.message}</span></div>}
       </form>
+      {stale && frontier && <p role="status">Recommendations and simulations are stale. Select Compare alternatives to calculate with the chosen estimator. Displayed values retain their original model.</p>}
       {(report || frontier) && <nav className="result-views" aria-label="Result views">
         {report && <button type="button" className="secondary-button" disabled={loading} aria-pressed={view === "analysis"} onClick={() => setView("analysis")}>Historical analysis</button>}
         {frontier && <button type="button" className="secondary-button" disabled={loading} aria-pressed={view === "frontier"} onClick={() => setView("frontier")}>Decision alternatives</button>}
       </nav>}
       {!loading && view === "analysis" && report && <AnalysisResults report={report} />}
-      {!loading && view === "frontier" && frontier && <FrontierResults key={frontier.report_hash} report={frontier} />}
+      {!loading && view === "frontier" && frontier && <FrontierResults key={frontier.report_hash} report={frontier} stale={stale} />}
     </section>
   );
 }

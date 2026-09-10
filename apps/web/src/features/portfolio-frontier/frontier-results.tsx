@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ReturnComparison } from "../expected-returns/return-comparison";
 import { SimulationResults } from "../portfolio-simulation/simulation-results";
 
 import type { DecisionFact, FrontierReport, ProfileName } from "./types";
@@ -25,8 +26,9 @@ function factText(fact: DecisionFact): string {
   }
 }
 
-export function FrontierResults({ report, suggestedProfile, alternatives, capital }: {
+export function FrontierResults({ report, suggestedProfile, alternatives, capital, stale = false }: {
   report: FrontierReport;
+  stale?: boolean;
   suggestedProfile?: ProfileName;
   capital?: string;
   alternatives?: { profile: ProfileName; allocations: { asset_id: string; weight: number; amount: string }[] }[];
@@ -53,7 +55,7 @@ export function FrontierResults({ report, suggestedProfile, alternatives, capita
   return <section className="analysis-results frontier-results" aria-labelledby="frontier-title">
     <div className="result-heading"><div><p className="eyebrow">Decision alternatives</p><h2 id="frontier-title">Explore the trade-off</h2></div>
       <p>{report.window.effective_start} – {report.window.effective_end}<br />{report.window.return_observations} shared daily returns</p></div>
-    <p className="supporting-copy">These are historical model estimates, not guaranteed future outcomes. Profiles describe relative choices among {suggestedProfile ? "eligible S&P 500 stocks" : "your selected stocks"}.</p>
+    <p className="supporting-copy">These are model estimates, not guaranteed future outcomes. Profiles describe relative choices among {suggestedProfile ? "eligible S&P 500 stocks" : "your selected stocks"}.</p>
     {suggestedProfile && <p className="data-card">Questionnaire suggestion: <strong>{labels[suggestedProfile]}</strong>. {selected === suggestedProfile ? "Showing your suggested allocation." : `Exploring the ${labels[selected]} alternative; your questionnaire suggestion is unchanged.`}</p>}
     <fieldset className="profile-controls"><legend>Risk preference</legend>
       {report.frontier.profiles.map((item) => <label key={item.name} className={selected === item.name ? "profile-option selected" : "profile-option"}>
@@ -107,7 +109,8 @@ export function FrontierResults({ report, suggestedProfile, alternatives, capita
       {report.references.map((item) => <tr key={item.id}><th>{labels[item.id]}</th><td>{percent.format(item.metrics.expected_return)}</td><td>{percent.format(item.metrics.volatility)}</td><td>{item.constraint_status === "valid" ? "Valid" : item.constraint_status === "exceeds_max_weight" ? "Exceeds weight cap" : "Reference only; outside investable stocks"}</td></tr>)}
     </tbody></table></div></section>
     <section className="data-card"><h3>Decision facts · {labels[selected]}</h3><ul>{report.facts.filter((fact) => fact.profile === selected).map((fact) => <li key={fact.id}>{factText(fact)}</li>)}</ul></section>
-    <SimulationResults report={report} selected={selected} capital={capital ?? report.holdings_capital ?? null} />
+    {report.expected_return_comparison && <ReturnComparison comparison={report.expected_return_comparison} />}
+    <SimulationResults stale={stale} report={report} selected={selected} capital={capital ?? report.holdings_capital ?? null} />
     <section className="data-card"><h3>Assumptions</h3><ul>{report.assumptions.map((item) => <li key={item}>{item}</li>)}</ul></section>
     <details className="details-card"><summary>Advanced frontier details</summary>
       <h3>Frontier values</h3><div className="table-scroll"><table><thead><tr><th>Point</th><th>Estimated annual return</th><th>Estimated annual volatility</th></tr></thead><tbody>{report.frontier.points.map((item) => <tr key={item.id}><th>{item.id}</th><td>{percent.format(item.metrics.expected_return)}</td><td>{percent.format(item.metrics.volatility)}</td></tr>)}</tbody></table></div>

@@ -32,6 +32,7 @@ from app.domain.errors import (
     MarketDataValidationError,
     OptimizationSolverError,
 )
+from app.domain.forecast import SimpleForecastEstimator
 from app.domain.market_data import (
     AssetPriceSeries,
     DataProvenance,
@@ -101,6 +102,7 @@ __all__ = [
     "FinancialConventions",
     "HistoricalAnalytics",
     "HistoricalMeanEstimator",
+    "SimpleForecastEstimator",
     "HistoricalSampleRiskEstimator",
     "HistoricalSeriesPoint",
     "InvestmentUniverse",

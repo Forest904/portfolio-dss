@@ -2,6 +2,7 @@ import time
 from decimal import Decimal
 from itertools import product
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -199,8 +200,10 @@ def test_single_supervisor_lease(tmp_path: Path) -> None:
     second = ProcessGuidedJobs(SQLiteGuidedRepository(path), FixtureFactory(), lambda: "fixture")
     first.start()
     try:
-        with pytest.raises(RuntimeError, match="one API process"):
-            second.start()
+        with patch.object(second.repository, "initialize") as migrate:
+            with pytest.raises(RuntimeError, match="one API process"):
+                second.start()
+            migrate.assert_not_called()
     finally:
         first.close()
     second.start()

@@ -559,3 +559,9 @@ th {
 .simulation-output caption { text-align: left; padding: .75rem 0; font-weight: 600; }
 .simulation-section pre { max-height: 26rem; overflow: auto; }
 @media (max-width: 760px) { .simulation-fans { grid-template-columns: 1fr; } .simulation-controls { align-items: stretch; flex-direction: column; } }
+
+.portfolio-form select { padding: .65rem; border: 1px solid #a9bcb0; border-radius: .5rem; background: white; color: #18382b; max-width: 100%; width: 100%; }
+.expected-return-comparison { min-width: 0; }
+.expected-return-comparison table { min-width: 650px; }
+.expected-return-comparison .fine-print { overflow-wrap: anywhere; }
+.expected-return-comparison .table-scroll:focus-visible { outline: 2px solid #236449; outline-offset: 3px; }

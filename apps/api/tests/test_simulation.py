@@ -150,6 +150,7 @@ def test_old_guided_cache_migration_is_idempotent(tmp_path: Path) -> None:
     repository = SQLiteGuidedRepository(tmp_path / "jobs.db")
     repository.initialize()
     with repository.connect() as db:
+        db.execute("ALTER TABLE guided_runs DROP COLUMN estimator")
         db.execute("PRAGMA user_version=0")
         db.execute("INSERT INTO guided_models VALUES ('old',0,?)", (b"old-schema",))
         db.execute(

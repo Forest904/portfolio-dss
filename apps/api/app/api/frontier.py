@@ -13,6 +13,7 @@ from app.api.schemas import (
     OptimizationConstraintsRequest,
     PositionRequest,
 )
+from app.application.estimators import EstimatorId, ExpectedReturnComparison
 from app.application.frontier import DecisionFact, PortfolioFrontierService, ReferencePortfolio
 from app.domain.analysis import AnalysisWindow
 from app.domain.conventions import FinancialConventions
@@ -24,12 +25,14 @@ router = APIRouter()
 
 
 class PortfolioFrontierRequest(ApiModel):
+    expected_return_estimator: EstimatorId = "historical_mean"
     positions: list[PositionRequest] = Field(min_length=1)
     history: HistoryRequest | None = None
     constraints: OptimizationConstraintsRequest | None = None
 
 
 class PortfolioFrontierResponse(ApiModel):
+    expected_return_comparison: ExpectedReturnComparison | None = None
     window: AnalysisWindow
     frontier: FrontierResult
     references: tuple[ReferencePortfolio, ...]
@@ -67,6 +70,7 @@ def generate_frontier(
     report = service.generate(
         [(position.ticker, position.quantity) for position in payload.positions],
         max_weight=payload.constraints.max_weight if payload.constraints else None,
+        expected_return_estimator=payload.expected_return_estimator,
         start=payload.history.start if payload.history else None,
         end=payload.history.end if payload.history else None,
     )

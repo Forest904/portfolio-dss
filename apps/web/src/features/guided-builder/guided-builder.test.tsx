@@ -43,7 +43,7 @@ describe("Guided builder", () => {
     render(<GuidedBuilder />);
     submit();
     await screen.findByRole("heading", { name: "Explore the trade-off" });
-    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toEqual({ version: "guided-preferences-v1", capital: "1000.01", answers: { trade_off: "conservative", fluctuations: "moderate", decline: "aggressive" } });
+    expect(JSON.parse(String(fetch.mock.calls[0][1]?.body))).toEqual({ version: "guided-preferences-v1", expected_return_estimator: "historical_mean", capital: "1000.01", answers: { trade_off: "conservative", fluctuations: "moderate", decline: "aggressive" } });
     expect(screen.getByRole("radio", { name: /^Conservative/ })).toBeChecked();
     expect(screen.queryByText("Current weight")).not.toBeInTheDocument();
     expect(screen.getByText(/12 of 12 current constituent/)).toBeInTheDocument();

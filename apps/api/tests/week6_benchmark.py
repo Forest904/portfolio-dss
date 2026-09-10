@@ -11,6 +11,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from app.application.estimators import EstimatorId
 from app.application.guided import GuidedModel, GuidedRecommendationService
 from app.core.config import Settings
 from app.infrastructure.guided_jobs import ProcessGuidedJobs, SQLiteGuidedRepository
@@ -64,9 +65,13 @@ class MeasuredService(GuidedRecommendationService):
         self.wrapped = fixture_service(500, 756, repository=repository)
         self.output = repository.path.with_suffix(".metrics.json")
 
-    def calculate(self, progress: Callable[[str], None]) -> GuidedModel:
+    def calculate(
+        self,
+        progress: Callable[[str], None],
+        expected_return_estimator: EstimatorId = "historical_mean",
+    ) -> GuidedModel:
         started = time.monotonic()
-        model = self.wrapped.calculate(progress)
+        model = self.wrapped.calculate(progress, expected_return_estimator)
         self.output.write_text(
             json.dumps(
                 {
@@ -101,6 +106,9 @@ def main() -> None:
                 json={
                     "version": "guided-preferences-v1",
                     "capital": "10000.00",
+                    "expected_return_estimator": "simple_forecast"
+                    if "--forecast" in sys.argv
+                    else "historical_mean",
                     "answers": {
                         "trade_off": "moderate",
                         "fluctuations": "moderate",
@@ -133,6 +141,7 @@ def main() -> None:
             "total_seconds": time.monotonic() - started,
             "maximum_health_seconds": max(health_times),
             "health_checks": len(health_times),
+            "estimator": "simple_forecast" if "--forecast" in sys.argv else "historical_mean",
             "assets": 500,
             "prices_per_asset": 756,
             "stages_observed": stages,

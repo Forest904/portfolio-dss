@@ -154,6 +154,11 @@ Exit criteria:
 
 **Goal:** add a second expected-return model without changing the optimizer.
 
+**State:** complete. Fixed 63-observation exponential forecasting, both workflow selectors,
+fixed-weight comparisons, diagnostics, and guided-job migration are implemented. Numerical/API/UI
+checks, the 500-stock forecast benchmark, and desktop/mobile visual acceptance passed on
+2026-09-09; see ADR 0012 and `docs/TESTING.md`.
+
 Deliverables:
 
 - choose and document a simple forecast model;

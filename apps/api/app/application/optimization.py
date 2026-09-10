@@ -5,12 +5,18 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from app.application.analysis import align_price_history, subtract_calendar_years
 from app.application.errors import data_unavailable, invalid_input, optimization_failed
+from app.application.estimators import (
+    EstimatorId,
+    EstimatorRegistry,
+    ExpectedReturnComparison,
+    compare_weights,
+)
 from app.application.valuation import (
     NEW_YORK,
     latest_completed_session_ceiling,
@@ -67,6 +73,7 @@ class PortfolioOptimizationReport:
     max_weight: float | None
     assumptions: tuple[str, ...]
     diagnostics: tuple[str, ...]
+    expected_return_comparison: ExpectedReturnComparison
     optimization_hash: str
 
 
@@ -79,12 +86,13 @@ class PortfolioOptimizationService:
         risk_estimator: RiskEstimator,
         optimizer: PortfolioOptimizer,
         *,
+        estimator_registry: EstimatorRegistry | None = None,
         clock: Callable[[], datetime] | None = None,
         maximum_consecutive_missing: int = 5,
     ) -> None:
         self._universe_provider = universe_provider
         self._market_data_provider = market_data_provider
-        self._expected_return_estimator = expected_return_estimator
+        self._estimators = estimator_registry or EstimatorRegistry(expected_return_estimator)
         self._risk_estimator = risk_estimator
         self._optimizer = optimizer
         self._clock = clock or (lambda: datetime.now(UTC))
@@ -98,6 +106,7 @@ class PortfolioOptimizationService:
         max_weight: float | None = None,
         start: date | None = None,
         end: date | None = None,
+        expected_return_estimator: EstimatorId = "historical_mean",
     ) -> PortfolioOptimizationReport:
         normalized = normalize_positions(positions)
         asset_ids = tuple(ticker for ticker, _ in normalized)
@@ -131,9 +140,11 @@ class PortfolioOptimizationService:
             raise data_unavailable(str(exc), source="wikipedia") from exc
         validate_supported_assets(asset_ids, {asset.ticker for asset in universe_snapshot.assets})
 
+        benchmark_id = universe_snapshot.universe.benchmark_asset_id
+        requested_assets = (*asset_ids, benchmark_id)
         try:
             history = self._market_data_provider.get_price_history(
-                asset_ids,
+                requested_assets,
                 requested_start,
                 requested_end,
                 ReturnFrequency.DAILY,
@@ -144,7 +155,7 @@ class PortfolioOptimizationService:
             raise data_unavailable(str(exc), source="yahoo_finance") from exc
         dates, aligned, excluded = align_price_history(
             history,
-            asset_ids,
+            requested_assets,
             maximum_consecutive_missing=self._maximum_consecutive_missing,
         )
         conventions = DEFAULT_FINANCIAL_CONVENTIONS
@@ -162,7 +173,19 @@ class PortfolioOptimizationService:
             annualization_periods=conventions.annualization_periods,
             missing_data_policy=conventions.missing_data_policy,
         )
-        signal = self._expected_return_estimator.estimate(sample)
+        benchmark_sample = replace(
+            sample,
+            asset_ids=(benchmark_id,),
+            returns=(
+                tuple(
+                    float(aligned[benchmark_id][i] / aligned[benchmark_id][i - 1] - 1)
+                    for i in range(1, len(dates))
+                ),
+            ),
+        )
+        benchmark_pair = self._estimators.estimate(benchmark_sample)
+        pair = self._estimators.estimate(sample)
+        signal = pair.selected(expected_return_estimator)
         risk = self._risk_estimator.estimate(sample)
         request = OptimizationRequest(signal, risk, risk_aversion, constraints)
         try:
@@ -185,10 +208,28 @@ class PortfolioOptimizationService:
                 asset_ids, current_weights.weights, result.weights.weights, strict=True
             )
         )
+        comparison = ExpectedReturnComparison(
+            expected_return_estimator,
+            pair,
+            benchmark_pair,
+            (
+                compare_weights(
+                    "sp500_proxy", PortfolioWeights((benchmark_id,), (1.0,)), benchmark_pair
+                ),
+                compare_weights("current", current_weights, pair),
+                compare_weights("recommended", result.weights, pair),
+                compare_weights(
+                    "equal_weight",
+                    PortfolioWeights(asset_ids, (1 / len(asset_ids),) * len(asset_ids)),
+                    pair,
+                ),
+            ),
+        )
         assumptions = (
-            "Expected returns are annualized arithmetic means of observed daily simple returns",
+            f"Expected-return estimator: {signal.estimator_name}; "
+            "annualized arithmetic daily mean.",
             "Risk is annualized historical sample covariance using 252 trading periods per year",
-            "The recommendation is an estimate, not a forecast or guaranteed future "
+            "The recommendation uses estimated parameters, not a guaranteed future "
             "allocation outcome",
             "Long-only, fully invested weights; no short selling, leverage, costs, taxes, "
             "or turnover constraint",
@@ -207,9 +248,12 @@ class PortfolioOptimizationService:
             "max_weight": max_weight,
             "recommended_weights": result.weights.weights,
             "assumptions": assumptions,
+            "expected_return_comparison": asdict(comparison),
         }
         optimization_hash = hashlib.sha256(
-            json.dumps(stable, sort_keys=True, separators=(",", ":")).encode()
+            json.dumps(
+                stable, sort_keys=True, separators=(",", ":"), default=str, allow_nan=False
+            ).encode()
         ).hexdigest()
         return PortfolioOptimizationReport(
             window=AnalysisWindow(
@@ -233,5 +277,6 @@ class PortfolioOptimizationService:
             max_weight=max_weight,
             assumptions=assumptions,
             diagnostics=(*signal.diagnostics, *risk.diagnostics),
+            expected_return_comparison=comparison,
             optimization_hash=optimization_hash,
         )

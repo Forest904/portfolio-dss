@@ -8,6 +8,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.application.estimators import EstimatorId, ExpectedReturnComparison
+
 
 class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
@@ -54,7 +56,7 @@ class PortfolioOptimizationRequest(ApiModel):
     risk_aversion: float = Field(ge=0.0)
     history: HistoryRequest | None = None
     constraints: OptimizationConstraintsRequest | None = None
-    expected_return_estimator: Literal["historical_mean"] = "historical_mean"
+    expected_return_estimator: EstimatorId = "historical_mean"
 
 
 class ProvenanceResponse(ApiModel):
@@ -283,6 +285,7 @@ class SolverDiagnosticsResponse(ApiModel):
 
 
 class PortfolioOptimizationResponse(ApiModel):
+    expected_return_comparison: ExpectedReturnComparison
     window: AnalysisWindowResponse
     allocations: list[AllocationComparisonResponse]
     comparison: OptimizationComparisonResponse

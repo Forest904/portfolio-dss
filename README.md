@@ -134,3 +134,12 @@ Open **Explore uncertainty** under Decision alternatives in either portfolio jou
 path count and random seed in advanced controls. Simulations assume continuously maintained
 weights and constant parameters, and are not guarantees. See [ADR 0011](docs/adr/0011-monte-carlo-uncertainty.md)
 and [validation status](docs/TESTING.md). Desktop/mobile visual acceptance remains pending.
+
+### Expected-return models (Week 8)
+
+Both journeys offer Historical mean (default) and Simple forecast, a normalized exponential
+mean with a fixed 63-trading-observation half-life. Compare both annualized return estimates at
+the same portfolio weights; expand diagnostics and paginated asset estimates for details.
+Changing the estimator requires recalculation. Risk remains historical sample covariance.
+See [ADR 0012](docs/adr/0012-simple-explainable-forecast.md) for methodology, API compatibility,
+and cache migration. Predictive accuracy evaluation is deferred to Week 9.

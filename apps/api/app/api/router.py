@@ -258,6 +258,7 @@ def optimize_portfolio(
     report = service.optimize(
         [(position.ticker, position.quantity) for position in payload.positions],
         risk_aversion=payload.risk_aversion,
+        expected_return_estimator=payload.expected_return_estimator,
         max_weight=payload.constraints.max_weight if payload.constraints else None,
         start=payload.history.start if payload.history else None,
         end=payload.history.end if payload.history else None,
@@ -268,6 +269,7 @@ def optimize_portfolio(
     risk = report.risk_estimate
     solver = report.optimization.solver
     return PortfolioOptimizationResponse(
+        expected_return_comparison=report.expected_return_comparison,
         window=AnalysisWindowResponse(
             requested_start=report.window.requested_start,
             requested_end=report.window.requested_end,

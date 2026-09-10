@@ -35,6 +35,7 @@ def test_optimize_endpoint_returns_valid_recommended_allocation(tmp_path: Path) 
     start = date(2025, 1, 1)
     provider = FakeMarketDataProvider(
         {
+            "SPY": varying_rows(start, 300.0, (0.005, -0.003, 0.002)),
             "AAPL": varying_rows(start, 100.0, (0.012, -0.006, 0.004)),
             "MSFT": varying_rows(start, 200.0, (0.004, -0.002, 0.003)),
         }
@@ -71,7 +72,7 @@ def test_optimize_endpoint_returns_valid_recommended_allocation(tmp_path: Path) 
     )
     assert payload["optimization_hash"] == second.json()["optimization_hash"]
     assert provider.calls == 2
-    assert provider.requested_asset_ids == [("AAPL", "MSFT"), ("AAPL", "MSFT")]
+    assert provider.requested_asset_ids == [("AAPL", "MSFT", "SPY"), ("AAPL", "MSFT", "SPY")]
 
 
 def test_optimize_endpoint_rejects_infeasible_cap_without_fetching_data(tmp_path: Path) -> None:
@@ -105,6 +106,7 @@ def test_optimize_endpoint_sanitizes_solver_failure(tmp_path: Path) -> None:
     start = date(2025, 1, 1)
     provider = FakeMarketDataProvider(
         {
+            "SPY": varying_rows(start, 300.0, (0.005, -0.003, 0.002)),
             "AAPL": varying_rows(start, 100.0, (0.01, -0.005)),
             "MSFT": varying_rows(start, 100.0, (0.005, -0.002)),
         }

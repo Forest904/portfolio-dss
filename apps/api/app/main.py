@@ -21,6 +21,7 @@ from app.application import (
     PortfolioOptimizationService,
     PortfolioValuationService,
 )
+from app.application.estimators import EstimatorRegistry
 from app.application.frontier import PortfolioFrontierService
 from app.application.simulation import PortfolioSimulationService
 from app.core.config import API_DESCRIPTION, API_TITLE, API_VERSION, Settings, load_settings
@@ -57,6 +58,7 @@ def create_app(
     market_data_provider: MarketDataProvider | None = None,
     expected_return_estimator: ExpectedReturnEstimator | None = None,
     risk_estimator: RiskEstimator | None = None,
+    estimator_registry: EstimatorRegistry | None = None,
     portfolio_optimizer: PortfolioOptimizer | None = None,
     frontier_generator: EfficientFrontierGenerator | None = None,
     clock: Callable[[], datetime] | None = None,
@@ -120,6 +122,7 @@ def create_app(
         expected_return_estimator or HistoricalMeanEstimator(),
         risk_estimator or HistoricalSampleRiskEstimator(),
         portfolio_optimizer or ScipyMeanVarianceOptimizer(),
+        estimator_registry=estimator_registry,
         clock=clock,
         maximum_consecutive_missing=runtime.maximum_consecutive_missing,
     )
@@ -131,6 +134,7 @@ def create_app(
         risk_estimator or HistoricalSampleRiskEstimator(),
         frontier_generator or ScipyEfficientFrontierGenerator(),
         profiles=runtime.frontier_profiles,
+        estimator_registry=estimator_registry,
         clock=clock,
         maximum_consecutive_missing=runtime.maximum_consecutive_missing,
     )

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { estimatorLabels } from "../expected-returns/estimator-selector";
 import type { FrontierReport, ProfileName } from "../portfolio-frontier/types";
 import { scenarioFromReport, type PortfolioSimulation, type Settings, type SimulationReport } from "./types";
 
@@ -10,7 +11,7 @@ const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD",
 const pct = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 });
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 
-export function SimulationResults({ report, selected, capital }: { report: FrontierReport; selected: ProfileName; capital: string | null }) {
+export function SimulationResults({ report, selected, capital, stale = false }: { stale?: boolean; report: FrontierReport; selected: ProfileName; capital: string | null }) {
   const [opened, setOpened] = useState(false);
   const [settings, setSettings] = useState<Settings>({ horizon_years: 1, paths: 10000, seed: 42 });
   const [comparator, setComparator] = useState(report.references.some((p) => p.id === "current") ? "current" : "equal_weight");
@@ -24,11 +25,14 @@ export function SimulationResults({ report, selected, capital }: { report: Front
   const key = JSON.stringify([report.report_hash, capital, settings]);
   useEffect(() => () => { controller.current?.abort(); revision.current++; }, []);
 
+  useEffect(() => { if (stale) { controller.current?.abort(); revision.current++; } }, [stale]);
+
   function changeSettings(next: Settings) {
     controller.current?.abort(); revision.current++;
     setLoading(false); setError(""); setSettings(next);
   }
   async function run() {
+    if (stale) return;
     controller.current?.abort(); const version = ++revision.current;
     setError("");
     if (!capital) { setError("Refresh the recommendation to obtain its starting capital."); return; }
@@ -52,8 +56,10 @@ export function SimulationResults({ report, selected, capital }: { report: Front
 
   return <section className="data-card simulation-section" aria-labelledby="uncertainty-title">
     <h3 id="uncertainty-title">Explore possible outcomes</h3>
+    <p>Return model: {report.expected_return_comparison ? estimatorLabels[report.expected_return_comparison.selected_estimator] : "Historical mean"}. Historical covariance estimates risk. The selected mean is held constant over the simulation horizon.</p>
+    {stale && <p role="status">Simulation is stale because the estimator changed. Recalculate the recommendation first.</p>}
     <p>Simulated outcomes are not guaranteed. This model continuously maintains portfolio weights, including current holdings, with constant estimated return and volatility.</p>
-    {!opened ? <button className="secondary-button" onClick={() => { setOpened(true); void run(); }}>Explore uncertainty</button> : <>
+    {!opened ? <button disabled={stale} className="secondary-button" onClick={() => { setOpened(true); void run(); }}>Explore uncertainty</button> : <>
       <form className="simulation-controls" onSubmit={(event) => { event.preventDefault(); void run(); }}>
         <label>Simulation horizon<select value={settings.horizon_years} onChange={(e) => changeSettings({ ...settings, horizon_years: Number(e.target.value) })}>
           {[1, 3, 5].map((n) => <option key={n} value={n}>{n} {n === 1 ? "year" : "years"}</option>)}</select></label>
@@ -65,7 +71,7 @@ export function SimulationResults({ report, selected, capital }: { report: Front
           <label>Random seed<input required type="number" min="0" max="4294967295" step="1" value={Number.isNaN(settings.seed) ? "" : settings.seed}
             onChange={(e) => changeSettings({ ...settings, seed: e.target.valueAsNumber })} /></label>
         </details>
-        <button className="primary-button" disabled={loading} type="submit">{loading ? "Simulating…" : "Run simulation"}</button>
+        <button className="primary-button" disabled={loading || stale} type="submit">{loading ? "Simulating…" : "Run simulation"}</button>
       </form>
       {loading && <p role="status">Calculating possible outcomes…</p>}
       {error && <p role="alert">{error} Use Run simulation to retry.</p>}

@@ -10,6 +10,7 @@ from typing import Protocol
 
 from app.application.analysis import subtract_calendar_years
 from app.application.errors import data_unavailable, invalid_input
+from app.application.estimators import EstimatorId
 from app.application.frontier import FrontierReport, PortfolioFrontierService
 from app.application.valuation import latest_completed_session_ceiling
 from app.domain import (
@@ -111,7 +112,11 @@ class GuidedRecommendationService:
         self._cache, self._clock = cache, clock or (lambda: datetime.now(UTC))
         self._configuration_key = configuration_key
 
-    def calculate(self, progress: Callable[[str], None]) -> GuidedModel:
+    def calculate(
+        self,
+        progress: Callable[[str], None],
+        expected_return_estimator: EstimatorId = "historical_mean",
+    ) -> GuidedModel:
         progress("loading_universe")
         try:
             universe = self._universe.get_current_universe()
@@ -176,6 +181,7 @@ class GuidedRecommendationService:
         key = stable_hash(
             (
                 self._configuration_key,
+                expected_return_estimator,
                 self._frontier.configuration_signature,
                 universe.provenance.content_hash,
                 universe.universe.as_of_date,
@@ -207,6 +213,7 @@ class GuidedRecommendationService:
             universe,
             history,
             OptimizationConstraints(0.1),
+            expected_return_estimator=expected_return_estimator,
         )
         assumptions = tuple(a for a in report.assumptions if "timestamp-intersection" not in a)
         assumptions += (

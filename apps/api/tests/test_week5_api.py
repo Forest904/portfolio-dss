@@ -48,9 +48,8 @@ def test_frontier_report_matches_shared_inputs_and_deterministic_facts(tmp_path:
     response = api.post("/api/v1/portfolios/frontier", json=REQUEST)
     assert response.status_code == 200, response.text
     report = response.json()
-    expected_capital = (
-        Decimal(10) * Decimal(prices.prices["AAPL"][-1][1])
-        + Decimal(4) * Decimal(prices.prices["MSFT"][-1][1])
+    expected_capital = Decimal(10) * Decimal(prices.prices["AAPL"][-1][1]) + Decimal(4) * Decimal(
+        prices.prices["MSFT"][-1][1]
     )
     assert Decimal(report["holdings_capital"]) == expected_capital
     repeated = api.post("/api/v1/portfolios/frontier", json=REQUEST).json()

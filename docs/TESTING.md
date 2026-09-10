@@ -214,3 +214,74 @@ not physical iOS/Android hardware. Wide charts and tables deliberately require h
 scrolling on mobile. Synthetic returns are illustrative, not market forecasts. This pass is
 not a cross-browser or screen-reader audit; exact numerical replay retains ADR 0011's
 identical-input/environment requirement.
+
+
+## Week 8 ? Simple explainable forecast
+
+Validation on 2026-09-09: 170 backend tests and 39 frontend tests passed, along with Ruff,
+mypy, ESLint, TypeScript and the production Next.js build. Optimizer, frontier solver and
+simulation engine implementations are unchanged. ADR 0012 specifies the model and API changes.
+
+New tests cover hand-calculated normalized exponential weights, constant/negative/zero returns,
+annualization, recency, effective sample size, short histories, asset ordering, sample boundaries,
+nonfinite results, both solver contracts, default and invalid selectors, concurrent selection,
+injected models/version identity, fixed-weight arithmetic, shared SPY windows, guided worker
+propagation, cache separation, and idempotent version-0/version-1 database migration. Guided
+comparison generation calls the frontier solver once; forecast and historical paths perform
+identical market-data fetch counts. UI automation covers both journeys, stale provenance,
+superseded manual responses/guided polls, 500-asset pagination, and simulation model provenance.
+
+### Full-universe forecast benchmark
+
+From `apps/api`, run `uv run python -m tests.week6_benchmark --forecast`.
+The existing deterministic fixture uses 500 assets and 756 prices per asset; all data is synthetic.
+The spawned background worker completed successfully with forecast selection:
+
+- Worker calculation: 266.484 seconds; total: 272.796 seconds.
+- Peak worker working set: 366,792,704 bytes (349.8 MiB).
+- 540 concurrent health checks; maximum response time: 0.016 seconds.
+- Job stages observed: queued, loading prices, calculating alternatives, completed.
+
+This is a development-machine measurement, not a production throughput guarantee or evidence
+that forecast-based portfolios perform better. Parameter-estimation comparisons add no second
+solver invocation. The original benchmark still defaults to historical without `--forecast`.
+
+### Browser acceptance
+
+Passed in headed Chromium at 1440?1000 and 390?844 using the synthetic Week 8 API:
+`uv run uvicorn tests.week8_demo:app --host 127.0.0.1 --port 8018`.
+This fixture supplies 30 guided stocks (enough to exercise pagination), plus the manual
+AAPL/MSFT/SPY fixture. It has a separate Week 8 cache directory.
+
+The existing Next.js development server on port 3000 was used; browser-session routing forwarded
+API calls to port 8018. This exercised real backend responses and both user journeys. Automated
+proxy tests cover the normal Next.js forwarding path. A second web-server launch was blocked by
+automatic approval review, so it was unnecessary for these checks.
+
+- Guided: selected forecast, submitted USD 10,000 with moderate preferences, received the
+  selected-model allocation, inspected both return columns, expanded diagnostics, and moved to
+  asset page 2 (S025?S029 and SPY). Uncertainty completed with forecast provenance.
+- Guided switch: returning to review and selecting historical showed stale status; submitting
+  again produced a Historical mean report.
+- Manual: submitted default AAPL/MSFT holdings with forecast, inspected current/profile/equal
+  weight/SPY comparisons, then selected historical. Old forecast provenance remained visible,
+  simulation launch was disabled, and explicit recalculation replaced the report correctly.
+- Desktop/mobile: labels and annual units readable, details wrap, tables scroll horizontally,
+  pagination works. Manual mobile document width was 375 CSS px within a 390 px viewport, with
+  no page-wide overflow. Keyboard focus and horizontal arrow scrolling were exercised on the
+  comparison table.
+
+Screenshots inspected locally under `output/playwright/`: `week8-guided-desktop.png`,
+`week8-guided-mobile-columns.png`, `week8-manual-desktop.png`, `week8-manual-mobile.png`.
+These are ignored QA artifacts. Initial harness setup produced one failed request before routing
+was corrected; subsequent guided/manual requests succeeded. The only other browser error was an
+unrelated favicon 404. Mobile testing uses a narrow browser viewport, not physical mobile hardware.
+No market data, brokerage calls, out-of-sample accuracy evaluation, or trading actions were used.
+
+
+One full-suite run emitted a Windows native access-violation diagnostic while concurrent SciPy
+calls were executing, but completed with exit code 0 and all 170 tests passing. The isolated
+concurrency test, the 16 Week 8 tests, and a subsequent full 170-test run passed without that
+diagnostic. Its cause was not established; no native-library fix is claimed. Track recurrence
+during Windows hardening in Week 11. Backend formatting checks also pass; one pre-existing
+formatting discrepancy in the Week 5 test was normalized to satisfy CI.
