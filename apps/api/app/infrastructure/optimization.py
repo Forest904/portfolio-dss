@@ -18,6 +18,7 @@ from app.domain import (
     SolverDiagnostics,
     evaluate_portfolio,
 )
+from app.infrastructure.scipy_guard import SCIPY_OPTIMIZATION_LOCK
 
 
 class ScipyMeanVarianceOptimizer:
@@ -54,15 +55,16 @@ class ScipyMeanVarianceOptimizer:
                     dtype=np.float64,
                 )
 
-            outcome = minimize(
-                objective,
-                initial,
-                jac=gradient,
-                method="SLSQP",
-                bounds=Bounds(np.zeros(len(asset_ids)), np.full(len(asset_ids), cap)),
-                constraints=LinearConstraint(np.ones((1, len(asset_ids))), 1.0, 1.0),
-                options={"ftol": self._tolerance, "maxiter": self._maximum_iterations},
-            )
+            with SCIPY_OPTIMIZATION_LOCK:
+                outcome = minimize(
+                    objective,
+                    initial,
+                    jac=gradient,
+                    method="SLSQP",
+                    bounds=Bounds(np.zeros(len(asset_ids)), np.full(len(asset_ids), cap)),
+                    constraints=LinearConstraint(np.ones((1, len(asset_ids))), 1.0, 1.0),
+                    options={"ftol": self._tolerance, "maxiter": self._maximum_iterations},
+                )
             raw_weights = np.asarray(outcome.x, dtype=float)
             success = bool(outcome.success)
             status = int(outcome.status)

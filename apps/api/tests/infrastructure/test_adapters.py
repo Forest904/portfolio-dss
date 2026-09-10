@@ -1,4 +1,9 @@
+import hashlib
+import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -122,3 +127,117 @@ def test_sqlite_cache_does_not_leave_the_database_locked(tmp_path: object) -> No
     assert cache.get("test", "key") is not None
     cache_path.unlink()
     assert not cache_path.exists()
+
+
+def test_yahoo_cache_reuses_asset_subsets_and_contained_ranges(tmp_path: Path) -> None:
+    calls: list[tuple[str, ...]] = []
+    columns = pd.MultiIndex.from_product([["Adj Close"], ["AAPL", "MSFT"]])
+    frame = pd.DataFrame(
+        [[100.0, 200.0], [101.0, 202.0], [102.0, 204.0]],
+        index=pd.to_datetime(["2026-09-01", "2026-09-02", "2026-09-03"]),
+        columns=columns,
+    )
+
+    def download(**kwargs: object) -> pd.DataFrame:
+        calls.append(tuple(kwargs["tickers"]))  # type: ignore[arg-type]
+        return frame
+
+    provider = YahooFinanceMarketDataProvider(
+        SQLiteCache(tmp_path / "range.sqlite3"),
+        clock=lambda: NOW,
+        downloader=download,
+    )
+    provider.get_price_history(
+        ("AAPL", "MSFT"),
+        date(2026, 9, 1),
+        date(2026, 9, 3),
+        ReturnFrequency.DAILY,
+        PriceField.ADJUSTED_CLOSE,
+    )
+    subset = provider.get_price_history(
+        ("MSFT",),
+        date(2026, 9, 2),
+        date(2026, 9, 3),
+        ReturnFrequency.DAILY,
+        PriceField.ADJUSTED_CLOSE,
+    )
+
+    assert calls == [("AAPL", "MSFT")]
+    assert subset.asset_ids == ("MSFT",)
+    assert tuple(item.observed_on for item in subset.series[0].observations) == (
+        date(2026, 9, 2),
+        date(2026, 9, 3),
+    )
+    assert subset.provenance.content_hash == subset.calculate_content_hash()
+
+
+def test_corrupt_price_cache_is_evicted_and_refetched(tmp_path: Path) -> None:
+    path = tmp_path / "corrupt.sqlite3"
+    cache = SQLiteCache(path)
+    payload = json.dumps({"asset_id": "AAPL", "currency": "USD", "observations": []})
+    cache.put_price_series(
+        "yahoo_finance",
+        "AAPL",
+        "daily",
+        "adjusted_close",
+        date(2026, 9, 1),
+        date(2026, 9, 3),
+        payload,
+        NOW,
+    )
+    with cache._connect() as connection:  # noqa: SLF001 - deliberate corruption fixture
+        connection.execute(
+            "UPDATE price_series_cache SET payload=?, content_hash=?",
+            ("{broken", hashlib.sha256(b"different").hexdigest()),
+        )
+        connection.commit()
+    calls = 0
+
+    def download(**_: object) -> pd.DataFrame:
+        nonlocal calls
+        calls += 1
+        return pd.DataFrame({"Adj Close": [100.0]}, index=pd.to_datetime(["2026-09-03"]))
+
+    result = YahooFinanceMarketDataProvider(
+        cache, clock=lambda: NOW, downloader=download
+    ).get_price_history(
+        ("AAPL",),
+        date(2026, 9, 1),
+        date(2026, 9, 3),
+        ReturnFrequency.DAILY,
+        PriceField.ADJUSTED_CLOSE,
+    )
+    assert calls == 1
+    assert result.series[0].observations[0].adjusted_close == Decimal("100.0")
+
+
+def test_price_cache_supports_concurrent_readers_and_writers(tmp_path: Path) -> None:
+    cache = SQLiteCache(tmp_path / "concurrent.sqlite3")
+
+    def write(index: int) -> None:
+        payload = json.dumps({"asset_id": f"S{index}", "currency": "USD", "observations": []})
+        cache.put_price_series(
+            "fixture",
+            f"S{index}",
+            "daily",
+            "adjusted_close",
+            date(2026, 1, 1),
+            date(2026, 12, 31),
+            payload,
+            NOW,
+        )
+        assert (
+            cache.get_covering_price_series(
+                "fixture",
+                f"S{index}",
+                "daily",
+                "adjusted_close",
+                date(2026, 2, 1),
+                date(2026, 2, 2),
+                not_before=NOW - timedelta(seconds=1),
+            )
+            is not None
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        tuple(executor.map(write, range(32)))

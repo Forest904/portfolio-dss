@@ -349,6 +349,49 @@ local HTTP server served the unchanged report. Its sole browser console error wa
 favicon 404; no external report assets or application calls were needed. Mobile testing used a
 narrow browser viewport, not physical mobile hardware.
 
+## Week 11 hardening evidence — 2026-09-10
+
+Backend Ruff, formatting, and strict mypy checks pass. The full suite contains **227 tests** and
+passed five consecutive Windows runs after hardening. The prior native access-violation diagnostic
+was reproduced during the soak and traced to the unnecessary HiGHS maximum-return solve under
+concurrent requests. The endpoint is now an exact deterministic capped-greedy calculation; native
+SciPy/frontier entry points are serialized within a process. Twenty consecutive runs of the Week 8
+concurrent estimator-selection test then passed without a native diagnostic. The separate guided
+worker remains process-isolated.
+
+Hypothesis runs 75 deterministic examples per property for exact-cent capital conservation and
+risk-attribution permutation/sum invariants. Cache integration tests cover covering ranges, asset
+subsets, request ordering, cold refresh, bounded stale fallback, corrupt hashes, concurrent SQLite
+readers/writers, and unlocked cleanup. Runtime settings fail at startup on negative or non-finite
+operational limits. Unexpected backend warnings fail the suite except for two exact, documented
+Starlette/AnyIO deprecations; unexpected frontend `console.error` calls also fail tests.
+
+Frontend ESLint, TypeScript, **42 tests**, and the production Next.js build pass. The duplicate SVG
+tick key exposed by the earlier suite was corrected, including the single-observation case.
+
+The application-owned offline demo is exercised through real FastAPI manual-frontier and guided-job
+requests using 30 labelled synthetic assets. Start it with
+`uv run uvicorn app.cli.demo:app --port 8011`; it makes no external calls or test-module imports.
+
+Three frozen-data cases regenerate from the checked-in Week 9 snapshot with report hash
+`684c49f1087fb5c8c3239e953292fec92197fcf61b55a72f9e23f74a6934f9f8`. The canonical JSON and
+self-contained HTML live under `examples/case-studies/week11/`; direct regeneration is checked for
+identical domain output.
+
+Run `uv run python -m tests.week11_profile --output <path>` for measurement-only profiling. On the
+implementation machine (Windows 11, Python 3.12.2, NumPy 2.5.2, SciPy 1.18.1), the instrumented run
+recorded 1.94 seconds/2.1 MB Python peak for all case studies, 18.23 seconds/5.0 MB for the six-series
+backtest, 2.05 seconds/3.7 MB for six 50,000-path five-year simulations, and 0.34 seconds for 30
+per-asset cache writes plus 30 covering-range hits. `cProfile`/`tracemalloc` instrumentation affects
+these timings; they are reproducible observations, not service-level thresholds. Existing 500-asset
+guided benchmarks remain documented above for both estimators.
+
+The generated HTML was inspected in Chromium at desktop and 390×844 mobile widths. Headings,
+units, tables, limitation text, and the long report hash remain readable without page overflow.
+After embedding an empty data-URL favicon, a fresh reload produced zero console errors or warnings.
+Screenshots are retained under ignored `output/playwright/` as
+`week11-case-studies-desktop.png` and `week11-case-studies-mobile.png`.
+
 ## Week 10 acceptance evidence — 2026-09-10
 
 Backend validation from `apps/api`:

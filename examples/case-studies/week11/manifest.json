@@ -1,0 +1,39 @@
+{
+  "version": "case-studies-v1",
+  "analysis_start": "2023-01-01",
+  "analysis_end": "2025-12-31",
+  "simulation": {
+    "horizon_years": 3,
+    "paths": 10000,
+    "seed": 42
+  },
+  "cases": [
+    {
+      "kind": "existing_portfolio",
+      "id": "concentrated-technology",
+      "title": "Concentrated AAPL/MSFT portfolio",
+      "target_weights": {
+        "AAPL": 0.8,
+        "MSFT": 0.2
+      },
+      "expected_return_estimator": "historical_mean"
+    },
+    {
+      "kind": "guided_profiles",
+      "id": "five-sector-profiles",
+      "title": "Risk-profile choices across five sectors",
+      "tickers": ["AAPL", "MSFT", "JPM", "JNJ", "XOM"],
+      "capital": "10000.00",
+      "expected_return_estimator": "historical_mean",
+      "max_weight": 0.4
+    },
+    {
+      "kind": "estimator_comparison",
+      "id": "estimator-sensitivity",
+      "title": "Historical versus exponentially weighted estimates",
+      "tickers": ["AAPL", "MSFT", "JPM", "JNJ", "XOM"],
+      "capital": "10000.00",
+      "max_weight": 0.4
+    }
+  ]
+}

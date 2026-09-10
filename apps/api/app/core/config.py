@@ -1,5 +1,6 @@
 """Runtime metadata for the API process."""
 
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +23,16 @@ class Settings:
     stale_fallback_days: int = 7
     maximum_consecutive_missing: int = 5
     frontier_profiles: ProfileConfiguration = ProfileConfiguration()
+
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.provider_timeout_seconds) or self.provider_timeout_seconds <= 0:
+            raise ValueError("PORTFOLIO_DSS_PROVIDER_TIMEOUT must be finite and positive")
+        if self.price_cache_ttl_hours < 0 or self.universe_cache_ttl_hours < 0:
+            raise ValueError("cache TTL hours must be nonnegative")
+        if self.stale_fallback_days < 0:
+            raise ValueError("PORTFOLIO_DSS_STALE_FALLBACK_DAYS must be nonnegative")
+        if self.maximum_consecutive_missing < 0:
+            raise ValueError("PORTFOLIO_DSS_MAX_CONSECUTIVE_MISSING must be nonnegative")
 
 
 def load_settings() -> Settings:

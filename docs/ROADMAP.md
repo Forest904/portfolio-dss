@@ -219,6 +219,11 @@ Exit criteria:
 
 **Goal:** reliability and defensible results.
 
+**State:** complete. Seeded property tests, cache corruption/concurrency/range coverage, supported
+offline demo composition, deterministic frozen-data case studies, measurement-only profiling, and a
+central limitations register are implemented. See ADR 0015, `docs/TESTING.md`, and
+`examples/case-studies/week11/`.
+
 Deliverables:
 
 - broader automated tests;

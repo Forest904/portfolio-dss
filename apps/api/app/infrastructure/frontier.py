@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, LinearConstraint, linprog, minimize
+from scipy.optimize import Bounds, LinearConstraint, minimize
 
 from app.domain.errors import DomainValidationError, OptimizationSolverError
 from app.domain.frontier import (
@@ -17,6 +17,7 @@ from app.domain.frontier import (
 )
 from app.domain.models import PortfolioWeights
 from app.domain.optimization import OPTIMIZATION_TOLERANCE, SolverDiagnostics, evaluate_portfolio
+from app.infrastructure.scipy_guard import SCIPY_OPTIMIZATION_LOCK
 
 
 class ScipyEfficientFrontierGenerator:
@@ -72,15 +73,16 @@ class ScipyEfficientFrontierGenerator:
                 def gradient(weights: NDArray[np.float64]) -> NDArray[np.float64]:
                     return np.asarray(2 * covariance @ weights / scale, dtype=float)
 
-                outcome = minimize(
-                    objective,
-                    start,
-                    jac=gradient,
-                    method="SLSQP",
-                    bounds=Bounds(np.zeros(size), np.full(size, cap)),
-                    constraints=constraints,
-                    options={"ftol": 1e-12, "maxiter": self._maximum_iterations},
-                )
+                with SCIPY_OPTIMIZATION_LOCK:
+                    outcome = minimize(
+                        objective,
+                        start,
+                        jac=gradient,
+                        method="SLSQP",
+                        bounds=Bounds(np.zeros(size), np.full(size, cap)),
+                        constraints=constraints,
+                        options={"ftol": 1e-12, "maxiter": self._maximum_iterations},
+                    )
                 if not outcome.success:
                     fail(
                         "Frontier solver did not converge",
@@ -136,13 +138,32 @@ class ScipyEfficientFrontierGenerator:
         positive = eigenvalues > scale * 1e-12
         if not np.all(positive):
             rows = np.vstack((np.ones(size), eigenvectors[:, positive].T))
-            tied = linprog(
-                -means,
-                A_eq=rows,
-                b_eq=rows @ minimum_weights,
-                bounds=[(0, cap)] * size,
-                method="highs",
-            )
+            independent: list[NDArray[np.float64]] = []
+            for row in rows:
+                candidate = np.vstack((*independent, row)) if independent else row.reshape(1, -1)
+                if np.linalg.matrix_rank(candidate, tol=1e-10) > len(independent):
+                    independent.append(np.asarray(row, dtype=float))
+            constraints_matrix = np.vstack(independent)
+            constraints_value = constraints_matrix @ minimum_weights
+
+            def tie_objective(weights: NDArray[np.float64]) -> float:
+                return -float(means @ weights)
+
+            def tie_gradient(_: NDArray[np.float64]) -> NDArray[np.float64]:
+                return -means
+
+            with SCIPY_OPTIMIZATION_LOCK:
+                tied = minimize(
+                    tie_objective,
+                    minimum_weights,
+                    jac=tie_gradient,
+                    method="SLSQP",
+                    bounds=Bounds(np.zeros(size), np.full(size, cap)),
+                    constraints=LinearConstraint(
+                        constraints_matrix, constraints_value, constraints_value
+                    ),
+                    options={"ftol": 1e-12, "maxiter": self._maximum_iterations},
+                )
             if not tied.success:
                 fail("Minimum-variance tie resolution failed", message=str(tied.message))
             minimum_weights = verify(np.asarray(tied.x, dtype=float), None)
@@ -151,12 +172,17 @@ class ScipyEfficientFrontierGenerator:
                 fail("Minimum-variance tie resolution changed risk")
             minimum = tied_point
 
-        maximum = linprog(
-            -means, A_eq=np.ones((1, size)), b_eq=[1.0], bounds=[(0, cap)] * size, method="highs"
-        )
-        if not maximum.success:
-            fail("Maximum achievable return solve failed", message=str(maximum.message))
-        maximum_weights = verify(np.asarray(maximum.x, dtype=float), None)
+        maximum_weights = np.zeros(size, dtype=float)
+        remaining = 1.0
+        for index in sorted(
+            range(size), key=lambda item: (-means[item], request.expected_returns.asset_ids[item])
+        ):
+            allocated = min(cap, remaining)
+            maximum_weights[index] = allocated
+            remaining -= allocated
+            if remaining <= 1e-12:
+                break
+        maximum_weights = verify(maximum_weights, None)
         lower, upper = minimum.metrics.expected_return, float(means @ maximum_weights)
         if upper < lower - OPTIMIZATION_TOLERANCE:
             fail("Invalid frontier endpoint ordering")

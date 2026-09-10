@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 from collections.abc import Callable, Sequence
@@ -23,7 +22,7 @@ from app.domain import (
     PriceObservation,
     ReturnFrequency,
 )
-from app.infrastructure.cache import CacheEntry, SQLiteCache
+from app.infrastructure.cache import PriceCacheEntry, SQLiteCache
 
 
 def yahoo_symbol(asset_id: str) -> str:
@@ -61,24 +60,64 @@ class YahooFinanceMarketDataProvider:
         refresh_if_stale: bool = True,
     ) -> PriceHistory:
         ordered = tuple(asset_ids)
-        cache_key = self._cache_key(ordered, start, end, frequency, price_field)
-        cached = self._cache.get("prices", cache_key)
         now = self._clock()
-        if cached is not None and (
-            not refresh_if_stale or now - cached.retrieved_at <= self._refresh_ttl
-        ):
-            return self._deserialize(cached, stale_fallback=False)
+        components: dict[str, tuple[AssetPriceSeries, datetime, bool]] = {}
+        missing: list[str] = []
+        fresh_after = None if not refresh_if_stale else now - self._refresh_ttl
+        for asset_id in ordered:
+            entry = self._cache.get_covering_price_series(
+                self.provider_id,
+                asset_id,
+                frequency.value,
+                price_field.value,
+                start,
+                end,
+                not_before=fresh_after,
+            )
+            series = self._read_cached(entry, start, end) if entry is not None else None
+            if entry is None or series is None:
+                missing.append(asset_id)
+            else:
+                components[asset_id] = (series, entry.retrieved_at, False)
+        if not missing:
+            return self._compose(ordered, components, start, end, frequency, price_field)
         try:
-            history = self._download(ordered, start, end, frequency, price_field, now)
+            history = self._download(tuple(missing), start, end, frequency, price_field, now)
         except Exception as exc:
-            if cached is not None and now - cached.retrieved_at <= self._stale_fallback_limit:
-                return self._deserialize(cached, stale_fallback=True)
-            raise ExternalDataUnavailableError(
-                "Adjusted-close prices could not be retrieved."
-            ) from exc
-        payload = json.dumps(history.stable_payload(), sort_keys=True, separators=(",", ":"))
-        self._cache.put("prices", cache_key, payload, now, history.provenance.content_hash)
-        return history
+            for asset_id in missing:
+                entry = self._cache.get_covering_price_series(
+                    self.provider_id,
+                    asset_id,
+                    frequency.value,
+                    price_field.value,
+                    start,
+                    end,
+                    not_before=now - self._stale_fallback_limit,
+                )
+                series = self._read_cached(entry, start, end) if entry is not None else None
+                if entry is None or series is None:
+                    raise ExternalDataUnavailableError(
+                        "Adjusted-close prices could not be retrieved."
+                    ) from exc
+                components[asset_id] = (series, entry.retrieved_at, True)
+            return self._compose(ordered, components, start, end, frequency, price_field)
+        for series in history.series:
+            payload = self._serialize_series(series)
+            self._cache.put_price_series(
+                self.provider_id,
+                series.asset_id,
+                frequency.value,
+                price_field.value,
+                start,
+                end,
+                payload,
+                now,
+            )
+            components[series.asset_id] = (series, now, False)
+        self._cache.prune_price_series(
+            self.provider_id, older_than=now - self._stale_fallback_limit
+        )
+        return self._compose(ordered, components, start, end, frequency, price_field)
 
     def _download(
         self,
@@ -154,47 +193,76 @@ class YahooFinanceMarketDataProvider:
         raise ExternalDataUnavailableError(f"Yahoo returned no adjusted close for {symbol}.")
 
     @staticmethod
-    def _cache_key(
-        asset_ids: tuple[str, ...],
+    def _serialize_series(series: AssetPriceSeries) -> str:
+        return json.dumps(
+            {
+                "asset_id": series.asset_id,
+                "currency": series.currency.value,
+                "observations": [
+                    [item.observed_on.isoformat(), str(item.adjusted_close)]
+                    for item in series.observations
+                ],
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+    def _read_cached(
+        self, entry: PriceCacheEntry | None, start: date, end: date
+    ) -> AssetPriceSeries | None:
+        if entry is None:
+            return None
+        try:
+            raw = json.loads(entry.payload)
+            if raw["asset_id"] != entry.asset_id:
+                raise ValueError("cached asset identity does not match its key")
+            return AssetPriceSeries(
+                raw["asset_id"],
+                Currency(raw["currency"]),
+                tuple(
+                    PriceObservation(date.fromisoformat(observed_on), Decimal(price))
+                    for observed_on, price in raw["observations"]
+                    if start <= date.fromisoformat(observed_on) <= end
+                ),
+            )
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+            self._cache.delete_price_series(entry)
+            return None
+
+    def _compose(
+        self,
+        ordered: tuple[str, ...],
+        components: dict[str, tuple[AssetPriceSeries, datetime, bool]],
         start: date,
         end: date,
         frequency: ReturnFrequency,
         price_field: PriceField,
-    ) -> str:
-        raw = json.dumps(
-            [
-                "yahoo_finance",
-                asset_ids,
-                start.isoformat(),
-                end.isoformat(),
-                frequency,
-                price_field,
-            ],
-            separators=(",", ":"),
-        )
-        return hashlib.sha256(raw.encode()).hexdigest()
-
-    def _deserialize(self, entry: CacheEntry, *, stale_fallback: bool) -> PriceHistory:
-        raw = json.loads(entry.payload)
-        series = tuple(
-            AssetPriceSeries(
-                item["asset_id"],
-                Currency(item["currency"]),
-                tuple(
-                    PriceObservation(date.fromisoformat(observed_on), Decimal(price))
-                    for observed_on, price in item["observations"]
-                ),
-            )
-            for item in raw["series"]
+    ) -> PriceHistory:
+        if any(asset_id not in components for asset_id in ordered):
+            raise ExternalDataUnavailableError("Adjusted-close prices are incomplete.")
+        series = tuple(components[asset_id][0] for asset_id in ordered)
+        retrieved_at = min(components[asset_id][1] for asset_id in ordered)
+        stale_fallback = any(components[asset_id][2] for asset_id in ordered)
+        temporary = PriceHistory(
+            ordered,
+            series,
+            start,
+            end,
+            frequency,
+            price_field,
+            DataProvenance(self.provider_id, retrieved_at, "pending", stale_fallback),
         )
         return PriceHistory(
-            tuple(raw["asset_ids"]),
+            ordered,
             series,
-            date.fromisoformat(raw["start"]),
-            date.fromisoformat(raw["end"]),
-            ReturnFrequency(raw["frequency"]),
-            PriceField(raw["price_field"]),
+            start,
+            end,
+            frequency,
+            price_field,
             DataProvenance(
-                self.provider_id, entry.retrieved_at, entry.content_hash, stale_fallback
+                self.provider_id,
+                retrieved_at,
+                temporary.calculate_content_hash(),
+                stale_fallback,
             ),
         )

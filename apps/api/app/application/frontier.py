@@ -3,10 +3,12 @@
 import hashlib
 import json
 import math
+import threading
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import wraps
 from typing import Literal
 
 from app.application.analysis import align_price_history, subtract_calendar_years
@@ -52,6 +54,19 @@ from app.domain.frontier import (
     ProfileName,
 )
 from app.domain.market_data import PriceHistory
+
+_FRONTIER_CALCULATION_LOCK = threading.Lock()
+
+
+def serialized_frontier_calculation[**P, R](function: Callable[P, R]) -> Callable[P, R]:
+    """Keep native numerical stacks out of concurrent in-process request threads."""
+
+    @wraps(function)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        with _FRONTIER_CALCULATION_LOCK:
+            return function(*args, **kwargs)
+
+    return wrapper
 
 
 @dataclass(frozen=True, slots=True)
@@ -621,6 +636,7 @@ class PortfolioFrontierService:
             expected_return_estimator=expected_return_estimator,
         )
 
+    @serialized_frontier_calculation
     def build_report(
         self,
         asset_ids: tuple[str, ...],

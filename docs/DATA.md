@@ -88,6 +88,13 @@ requests reuse their cached snapshot. Current requests refresh after their TTL; 
 cached result may be returned only inside the configured seven-day bound and is marked as a stale
 fallback. The cache is a performance/reproducibility aid, not the source of business truth.
 
+Week 11 stores price snapshots per asset. A fresh snapshot can serve asset-subset and contained-range
+requests when it covers the entire requested interval. Partial intervals are never stitched across
+retrieval times. Composed histories retain requested ordering, use the oldest contributing retrieval
+time for freshness, and receive a new content hash. SQLite hash validation, WAL/busy-timeout handling,
+atomic writes, and pruning make corrupt or concurrent cache access fail as an ordinary cache miss
+rather than leaking invalid financial data. See ADR 0015.
+
 ## Reproducibility
 
 ### Walk-forward snapshots (Week 9)

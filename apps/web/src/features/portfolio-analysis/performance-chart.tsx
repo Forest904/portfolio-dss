@@ -41,7 +41,7 @@ export function PerformanceChart({ points }: { points: AnalysisSeriesPoint[] }) 
             vectorEffect="non-scaling-stroke"
           />
         ))}
-        {tickIndexes.map((index) => <text key={index} x={x(index)} y={height - 24} textAnchor={index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}>{points[index]?.date}</text>)}
+        {tickIndexes.map((index, position) => <text key={`${position}-${index}`} x={x(index)} y={height - 24} textAnchor={index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}>{points[index]?.date}</text>)}
         <text x={(left + width - right) / 2} y={height - 4} textAnchor="middle">Observation date</text>
         <text transform={`translate(18 ${(top + height - bottom) / 2}) rotate(-90)`} textAnchor="middle">Cumulative return (%)</text>
       </svg></div>

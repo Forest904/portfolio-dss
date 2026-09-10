@@ -95,6 +95,20 @@ npm run dev
 
 Open `http://localhost:3000`. The page checks the API server-side and remains usable when the API is offline. To use another API location, copy `.env.example` to `.env.local` and change `API_BASE_URL`.
 
+### Offline demonstration
+
+To exercise the complete API/web workflow without network data or cache preparation, start the
+explicitly synthetic API fixture from `apps/api`:
+
+```powershell
+uv run uvicorn app.cli.demo:app --port 8011
+```
+
+Then start the web app with `API_BASE_URL=http://127.0.0.1:8011`. The UI labels fixture provenance;
+production startup continues to use Wikipedia and Yahoo. Reproducible real-data case-study reports
+and their one-command generation instructions are under
+[`examples/case-studies/week11/`](examples/case-studies/week11/).
+
 ## Quality checks
 
 Run backend checks from `apps/api`:
@@ -122,6 +136,7 @@ GitHub Actions runs these commands independently for the backend and frontend us
 The initial convention is USD, daily adjusted-close prices, daily simple returns, and 252 trading periods per year. Missing values are never imputed silently; series are aligned by timestamp intersection and inadequate data will be reported as an error by the Week 2 data pipeline. S&P 500 comparisons use adjusted SPY prices as an explicitly labelled total-return ETF proxy.
 
 See [`docs/`](docs/) for scope, roadmap, mathematical model, and architecture decisions.
+Read [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) before interpreting recommendations or results.
 
 ### Market-data settings
 
