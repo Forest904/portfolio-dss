@@ -1,5 +1,6 @@
 import { PerformanceChart } from "./performance-chart";
 import type { ConcentrationSummary, PerformanceSummary, PortfolioAnalysis } from "./types";
+import { SectionHeading } from "@/components/presentation";
 
 const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 2 });
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -33,10 +34,9 @@ function PerformanceRow({ name, value }: { name: string; value: PerformanceSumma
 export function AnalysisResults({ report }: { report: PortfolioAnalysis }) {
   return (
     <div className="analysis-results" aria-live="polite">
-      <section className="result-heading">
-        <div><p className="eyebrow">Historical analysis</p><h2>Portfolio snapshot</h2></div>
+      <SectionHeading eyebrow="Historical analysis" title="Portfolio snapshot">
         <p>{report.window.effective_start} — {report.window.effective_end} · {report.window.return_observations} daily returns</p>
-      </section>
+      </SectionHeading>
       <section className="metrics-grid" aria-label="Current portfolio metrics">
         <Metric label={`Value on ${report.valuation.valued_on}`} value={money.format(Number(report.valuation.total_market_value.amount))} />
         <Metric label="Total return" value={percent.format(report.performance.current.total_return)} />

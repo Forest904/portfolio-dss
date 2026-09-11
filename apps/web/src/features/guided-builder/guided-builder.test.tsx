@@ -21,15 +21,19 @@ function submit() {
 describe("Guided builder", () => {
   it("starts with the builder, no preselected answers, and keeps existing analysis accessible", () => {
     render(<PortfolioWorkspace />);
+    expect(screen.getByRole("button", { name: "Build a portfolio" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("list", { name: "Builder progress" }).querySelector('[aria-current="step"]')).toHaveTextContent("Preferences");
     expect(screen.getAllByRole("radio")).toHaveLength(9);
     screen.getAllByRole("radio").forEach((radio) => expect(radio).not.toBeChecked());
     fireEvent.click(screen.getByRole("button", { name: "Analyze existing holdings" }));
+    expect(screen.getByRole("button", { name: "Analyze existing holdings" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByLabelText("Ticker 1")).toBeInTheDocument();
   });
 
   it("preserves answers and capital when moving backward", () => {
     render(<GuidedBuilder />);
     preferences();
+    expect(screen.getByRole("list", { name: "Builder progress" }).querySelector('[aria-current="step"]')).toHaveTextContent("Capital and review");
     expect(screen.getByLabelText("Investable capital (USD)")).toHaveValue("");
     fireEvent.change(screen.getByLabelText("Investable capital (USD)"), { target: { value: "123.45" } });
     fireEvent.click(screen.getByRole("button", { name: "Back to preferences" }));

@@ -1,5 +1,5 @@
-import { HealthStatus } from "@/features/system-status/health-status";
 import { PortfolioWorkspace } from "@/features/guided-builder/guided-builder";
+import { HealthStatus } from "@/features/system-status/health-status";
 import { checkApiHealth } from "@/lib/api-health";
 
 export const dynamic = "force-dynamic";
@@ -10,38 +10,29 @@ export default async function Home() {
   return (
     <main>
       <div className="page-shell">
-        <header className="hero">
-          <p className="product-mark">Portfolio DSS</p>
-          <h1>Make portfolio trade-offs easier to understand.</h1>
-          <p className="hero-copy">
-            A decision support system for comparing return, risk, and uncertainty—without pretending
-            forecasts are guarantees.
-          </p>
+        <header className="site-header">
+          <a className="brand" href="#top" aria-label="Portfolio DSS home">
+            <span className="brand-mark" aria-hidden="true">PD</span>
+            <span>Portfolio DSS</span>
+          </a>
+          <span className="header-context">Decision support · USD portfolios</span>
         </header>
 
-        <HealthStatus availability={availability} />
-
-        <PortfolioWorkspace />
-
-        <section className="principles" aria-label="Product principles">
-          <article>
-            <span>01</span>
-            <h2>Understand</h2>
-            <p>See what a portfolio owns and where its risks are concentrated.</p>
-          </article>
-          <article>
-            <span>02</span>
-            <h2>Compare</h2>
-            <p>Put current and alternative allocations on equal footing.</p>
-          </article>
-          <article>
-            <span>03</span>
-            <h2>Decide</h2>
-            <p>Make assumptions and uncertainty visible before acting.</p>
-          </article>
+        <section className="hero" id="top">
+          <p className="product-mark">Understand · Compare · Decide</p>
+          <h1>Make portfolio trade-offs easier to understand.</h1>
+          <p className="hero-copy">
+            Compare return, risk, and uncertainty without treating estimates as guarantees.
+          </p>
         </section>
 
-        <footer>Educational decision support—not trading automation or financial advice.</footer>
+        <HealthStatus availability={availability} />
+        <PortfolioWorkspace />
+
+        <footer>
+          <p><strong>Portfolio DSS</strong> helps you understand, compare, and decide with assumptions visible.</p>
+          <p>Educational decision support—not trading automation or financial advice.</p>
+        </footer>
       </div>
     </main>
   );

@@ -122,13 +122,15 @@ export function PortfolioAnalysisWorkspace() {
           requestVersion.current++; controller.current?.abort(); setLoading(false); setError(null);
           setEstimator(value); setStale(true);
         }} /></div>
-        <button className="secondary-button" disabled={loading} type="submit">{loading && view === "analysis" ? "Analyzing..." : "Analyze portfolio"}</button>
-        <button className="primary-button" disabled={loading} type="submit" value="frontier">{loading && view === "frontier" ? "Comparing alternatives…" : "Compare alternatives"}</button>
+        <div className="form-actions">
+          <button className="secondary-button" disabled={loading} type="submit">{loading && view === "analysis" ? "Analyzing..." : "Analyze portfolio"}</button>
+          <button className="primary-button" disabled={loading} type="submit" value="frontier">{loading && view === "frontier" ? "Comparing alternatives…" : "Compare alternatives"}</button>
+        </div>
         {error && <div role="alert" className="error-card"><strong>{error.code}</strong><span>{error.message}</span></div>}
       </form>
       {!loading && !report && !frontier && !error && <div className="empty-state"><strong>No results yet</strong><p>Analyze observed history or compare alternatives to see decision support here.</p></div>}
       {loading && <div className="empty-state" role="status"><strong>{view === "frontier" ? "Building comparable alternatives…" : "Analyzing aligned history…"}</strong><p>Your inputs remain available while the calculation runs.</p></div>}
-      {stale && frontier && <p role="status">Recommendations and simulations are stale. Select Compare alternatives to calculate with the chosen estimator. Displayed values retain their original model.</p>}
+      {stale && frontier && <p className="inline-notice warning" role="status">Recommendations and simulations are stale. Select Compare alternatives to calculate with the chosen estimator. Displayed values retain their original model.</p>}
       {(report || frontier) && <nav className="result-views" aria-label="Result views">
         {report && <button type="button" className="secondary-button" disabled={loading} aria-pressed={view === "analysis"} onClick={() => setView("analysis")}>Historical analysis</button>}
         {frontier && <button type="button" className="secondary-button" disabled={loading} aria-pressed={view === "frontier"} onClick={() => setView("frontier")}>Decision alternatives</button>}

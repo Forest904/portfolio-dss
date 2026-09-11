@@ -61,7 +61,7 @@ export function SimulationResults({ report, selected, capital, stale = false }: 
   return <section className="data-card simulation-section" aria-labelledby="uncertainty-title">
     <h3 id="uncertainty-title">Explore possible outcomes</h3>
     <p>Return model: {report.expected_return_comparison ? estimatorLabels[report.expected_return_comparison.selected_estimator] : "Historical mean"}. Historical covariance estimates risk. The selected mean is held constant over the simulation horizon.</p>
-    {stale && <p role="status">Simulation is stale because the estimator changed. Recalculate the recommendation first.</p>}
+    {stale && <p className="inline-notice warning" role="status">Simulation is stale because the estimator changed. Recalculate the recommendation first.</p>}
     <p>Simulated outcomes are not guaranteed. This model continuously maintains portfolio weights, including current holdings, with constant estimated return and volatility.</p>
     {!opened ? <div className="empty-state"><strong>Simulation not run</strong><p>Run it to compare ranges of possible outcomes; it will not replace the recommendation.</p><button disabled={stale} className="secondary-button" onClick={() => { setOpened(true); void run(); }}>Explore uncertainty</button></div> : <>
       <form className="simulation-controls" onSubmit={(event) => { event.preventDefault(); void run(); }}>
@@ -77,8 +77,8 @@ export function SimulationResults({ report, selected, capital, stale = false }: 
         </details>
         <button className="primary-button" disabled={loading || stale} type="submit">{loading ? "Simulating…" : "Run simulation"}</button>
       </form>
-      {loading && <p role="status">Calculating possible outcomes…</p>}
-      {error && <p role="alert">{error} Use Run simulation to retry.</p>}
+      {loading && <p className="inline-notice" role="status">Calculating possible outcomes…</p>}
+      {error && <p className="inline-notice error" role="alert">{error} Use Run simulation to retry.</p>}
       {result && <>
         {key !== resultKey && <p role="status">Results are stale: they use the previous settings. Run simulation to update.</p>}
         <SimulationCharts result={result} selected={selected} comparator={comparator} />

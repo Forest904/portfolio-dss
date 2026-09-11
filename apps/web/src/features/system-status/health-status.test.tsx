@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { HealthStatus } from "./health-status";
 
 describe("HealthStatus", () => {
-  it("renders the connected state", () => {
+  it("keeps the connected state out of the primary interface", () => {
     render(
       <HealthStatus
         availability={{
@@ -14,8 +14,8 @@ describe("HealthStatus", () => {
       />,
     );
 
-    expect(screen.getByRole("status")).toHaveTextContent("API connected");
-    expect(screen.getByText(/version 0.1.0/i)).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByText(/API connected/i)).not.toBeInTheDocument();
   });
 
   it("renders the unavailable state while keeping guidance visible", () => {
@@ -23,7 +23,7 @@ describe("HealthStatus", () => {
       <HealthStatus availability={{ available: false, reason: "API could not be reached." }} />,
     );
 
-    expect(screen.getByRole("status")).toHaveTextContent("API unavailable");
+    expect(screen.getByRole("alert")).toHaveTextContent("API unavailable");
     expect(screen.getByText(/start the API and refresh/i)).toBeInTheDocument();
   });
 });

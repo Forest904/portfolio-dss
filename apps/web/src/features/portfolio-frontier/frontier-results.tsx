@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { SectionHeading } from "@/components/presentation";
 import { ReturnComparison } from "../expected-returns/return-comparison";
 import { SimulationResults } from "../portfolio-simulation/simulation-results";
 
@@ -74,17 +75,10 @@ export function FrontierResults({ report, suggestedProfile, alternatives, capita
   const y = (value: number) => height - bottom - (value - yLow) / (yHigh - yLow) * (height - top - bottom);
 
   return <section className="analysis-results frontier-results" aria-labelledby="frontier-title">
-    <div className="result-heading"><div><p className="eyebrow">Decision alternatives</p><h2 id="frontier-title">Explore the trade-off</h2></div>
-      <p>{report.window.effective_start} – {report.window.effective_end}<br />{report.window.return_observations} shared daily returns</p></div>
+    <SectionHeading eyebrow="Decision alternatives" title="Explore the trade-off" id="frontier-title">
+      <p>{report.window.effective_start} – {report.window.effective_end}<br />{report.window.return_observations} shared daily returns</p>
+    </SectionHeading>
     <p className="supporting-copy">These are model estimates, not guaranteed future outcomes. Profiles describe relative choices among {suggestedProfile ? "eligible S&P 500 stocks" : "your selected stocks"}.</p>
-    {suggestedProfile && <p className="data-card">Questionnaire suggestion: <strong>{labels[suggestedProfile]}</strong>. {selected === suggestedProfile ? "Showing your suggested allocation." : `Exploring the ${labels[selected]} alternative; your questionnaire suggestion is unchanged.`}</p>}
-    <fieldset className="profile-controls"><legend>Risk preference</legend>
-      {report.frontier.profiles.map((item) => <label key={item.name} className={selected === item.name ? "profile-option selected" : "profile-option"}>
-        <input type="radio" name="risk-profile" value={item.name} checked={selected === item.name} onChange={() => setSelected(item.name)} />
-        <span><strong>{labels[item.name]}</strong><small>{percent.format(item.fraction)} of the achievable return range</small></span>
-      </label>)}
-    </fieldset>
-    {new Set(report.frontier.profiles.map((item) => item.point_id)).size < 3 && <p className="data-card" role="status">Some profiles coincide: the available assets and constraints do not provide three distinct efficient allocations.</p>}
     <section className="decision-summary" aria-labelledby="decision-summary-title">
       <p className="eyebrow">Decision support</p><h3 id="decision-summary-title">Why this portfolio?</h3>
       {suggestedProfile && preferenceExplanation && <p className="preference-rationale"><strong>Why this profile:</strong> {preferenceExplanation}</p>}
@@ -94,6 +88,25 @@ export function FrontierResults({ report, suggestedProfile, alternatives, capita
         {reason.evidence_fact_ids.length > 0 && <p className="evidence-links">Evidence: {reason.evidence_fact_ids.map((id, index) => <span key={id}>{index > 0 && " · "}<a href={`#fact-${id}`} onClick={() => { if (advanced.current) advanced.current.open = true; }}>{id}</a></span>)}</p>}
       </article>) : fallbackFacts.map((fact) => <article key={fact.id} className="reason-card"><span>decision fact</span><p>{factText(fact)}</p></article>)}</div>
       <p className="fine-print">Rule set: {explanation?.rule_version ?? "legacy fact display"}. Reasons are deterministic summaries of model facts, not financial advice.</p>
+    </section>
+    {suggestedProfile && <p className="profile-suggestion">Questionnaire suggestion: <strong>{labels[suggestedProfile]}</strong>. {selected === suggestedProfile ? "Showing your suggested allocation." : `Exploring the ${labels[selected]} alternative; your questionnaire suggestion is unchanged.`}</p>}
+    <fieldset className="profile-controls"><legend>Risk preference</legend>
+      {report.frontier.profiles.map((item) => <label key={item.name} className={selected === item.name ? "profile-option selected" : "profile-option"}>
+        <input type="radio" name="risk-profile" value={item.name} checked={selected === item.name} onChange={() => setSelected(item.name)} />
+        <span><strong>{labels[item.name]}</strong><small>{percent.format(item.fraction)} of the achievable return range</small></span>
+      </label>)}
+    </fieldset>
+    {new Set(report.frontier.profiles.map((item) => item.point_id)).size < 3 && <p className="inline-notice" role="status">Some profiles coincide: the available assets and constraints do not provide three distinct efficient allocations.</p>}
+    <div aria-live="polite" aria-atomic="true" className="metrics-grid" aria-label="Selected alternative metrics">
+      <article className="metric"><span>Selected alternative</span><strong>{labels[selected]}</strong></article>
+      <article className="metric"><span>Estimated annual arithmetic return</span><strong>{percent.format(point.metrics.expected_return)}</strong></article>
+      <article className="metric"><span>Estimated annual volatility</span><strong>{percent.format(point.metrics.volatility)}</strong></article>
+    </div>
+    <section className="data-card"><h3>{current ? `Largest allocation changes · ${labels[selected]}` : `Largest target holdings · ${labels[selected]}`}</h3>
+      <p className="fine-print">{current ? "The eight largest absolute changes are shown first. Changes are percentage points." : "The eight largest target holdings are shown. Amounts are illustrative, not share purchases."} The complete allocation is in advanced details.</p>
+      <div className="table-scroll allocation-scroll"><table aria-label="Allocation comparison"><thead><tr><th>Asset</th>{current && <th>Current weight</th>}<th>{labels[selected]} weight</th>{current && <th>Change (pp)</th>}{dollars && <th>Amount (USD)</th>}</tr></thead><tbody>
+        {focusedRows.map(({ asset, index }) => <tr key={asset}><th>{asset}</th>{current && <td>{percent.format(current.weights.weights[index])}</td>}<td>{percent.format(point.weights.weights[index])}</td>{current && <td>{signed.format(100 * (point.weights.weights[index] - current.weights.weights[index]))}</td>}{dollars && <td>{usd.format(Number(dollars[index].amount))}</td>}</tr>)}
+      </tbody></table></div>
     </section>
     <aside className="assumption-strip" aria-label="Key recommendation assumptions">
       <strong>Read this as an estimate:</strong> {report.expected_return_model.estimator_name}; {report.window.return_observations} daily returns; stocks only; {report.constraints.max_weight === null ? "no additional weight cap" : `${percent.format(report.constraints.max_weight)} per-stock cap`}; no guarantee of future results.
@@ -127,23 +140,12 @@ export function FrontierResults({ report, suggestedProfile, alternatives, capita
         {report.references.map((item, index) => <span key={item.id}><i style={{ background: colors[item.id] }} />{index + 1}. {labels[item.id]}</span>)}
       </div>
     </figure>
-    <div aria-live="polite" aria-atomic="true" className="metrics-grid" aria-label="Selected alternative metrics">
-      <article className="metric"><span>Selected alternative</span><strong>{labels[selected]}</strong></article>
-      <article className="metric"><span>Estimated annual arithmetic return</span><strong>{percent.format(point.metrics.expected_return)}</strong></article>
-      <article className="metric"><span>Estimated annual volatility</span><strong>{percent.format(point.metrics.volatility)}</strong></article>
-    </div>
-    <section className="data-card"><h3>{current ? `Largest allocation changes · ${labels[selected]}` : `Largest target holdings · ${labels[selected]}`}</h3>
-      <p className="fine-print">{current ? "The eight largest absolute changes are shown first. Changes are percentage points." : "The eight largest target holdings are shown. Amounts are illustrative, not share purchases."} The complete allocation is in advanced details.</p>
-      <div className="table-scroll allocation-scroll"><table aria-label="Allocation comparison"><thead><tr><th>Asset</th>{current && <th>Current weight</th>}<th>{labels[selected]} weight</th>{current && <th>Change (pp)</th>}{dollars && <th>Amount (USD)</th>}</tr></thead><tbody>
-        {focusedRows.map(({ asset, index }) => <tr key={asset}><th>{asset}</th>{current && <td>{percent.format(current.weights.weights[index])}</td>}<td>{percent.format(point.weights.weights[index])}</td>{current && <td>{signed.format(100 * (point.weights.weights[index] - current.weights.weights[index]))}</td>}{dollars && <td>{usd.format(Number(dollars[index].amount))}</td>}</tr>)}
-      </tbody></table></div>
-    </section>
     <section className="data-card"><h3>Comparable annual estimates</h3><div className="table-scroll"><table aria-label="Risk and return comparison"><thead><tr><th>Portfolio</th><th>Estimated return</th><th>Estimated volatility</th><th>Constraints</th></tr></thead><tbody>
       <tr><th>{labels[selected]}</th><td>{percent.format(point.metrics.expected_return)}</td><td>{percent.format(point.metrics.volatility)}</td><td>Valid</td></tr>
       {report.references.map((item) => <tr key={item.id}><th>{labels[item.id]}</th><td>{percent.format(item.metrics.expected_return)}</td><td>{percent.format(item.metrics.volatility)}</td><td>{item.constraint_status === "valid" ? "Valid" : item.constraint_status === "exceeds_max_weight" ? "Exceeds weight cap" : "Reference only; outside investable stocks"}</td></tr>)}
     </tbody></table></div></section>
-    {report.expected_return_comparison && <ReturnComparison comparison={report.expected_return_comparison} />}
     <SimulationResults stale={stale} report={report} selected={selected} capital={capital ?? report.holdings_capital ?? null} />
+    {report.expected_return_comparison && <ReturnComparison comparison={report.expected_return_comparison} />}
     <details ref={advanced} className="details-card"><summary>Advanced recommendation details</summary>
       <section aria-labelledby="allocation-facts-title"><h3 id="allocation-facts-title">Full allocations and structured facts</h3>
         <div className="table-scroll allocation-scroll"><table aria-label="Complete allocation"><thead><tr><th>Asset</th><th>{labels[baselineId]} weight</th><th>{labels[selected]} weight</th><th>Change (pp)</th>{dollars && <th>Amount (USD)</th>}</tr></thead><tbody>{allocationRows.map(({ asset, index, previous, target, change }) => <tr key={asset}><th>{asset}</th><td>{percent.format(previous)}</td><td>{percent.format(target)}</td><td>{signed.format(100 * change)}</td>{dollars && <td>{usd.format(Number(dollars[index].amount))}</td>}</tr>)}</tbody></table></div>

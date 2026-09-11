@@ -20,9 +20,15 @@ const stages: Record<string, string> = { queued: "Waiting to calculate", loading
 export function PortfolioWorkspace() {
   const [journey, setJourney] = useState<"build" | "analyze">("build");
   return <>
-    <nav className="result-views" aria-label="Portfolio journey">
-      <button className="secondary-button" aria-pressed={journey === "build"} onClick={() => setJourney("build")}>Build a portfolio</button>
-      <button className="secondary-button" aria-pressed={journey === "analyze"} onClick={() => setJourney("analyze")}>Analyze existing holdings</button>
+    <nav className="journey-switch" aria-label="Portfolio journey">
+      <button className="journey-option" aria-label="Build a portfolio" aria-pressed={journey === "build"} onClick={() => setJourney("build")}>
+        <span className="journey-number" aria-hidden="true">01</span>
+        <span><strong>Build a portfolio</strong><small>Start with your capital and preferences.</small></span>
+      </button>
+      <button className="journey-option" aria-label="Analyze existing holdings" aria-pressed={journey === "analyze"} onClick={() => setJourney("analyze")}>
+        <span className="journey-number" aria-hidden="true">02</span>
+        <span><strong>Analyze existing holdings</strong><small>Review history and compare alternatives.</small></span>
+      </button>
     </nav>
     <div hidden={journey !== "build"}><GuidedBuilder active={journey === "build"} /></div>
     {journey === "analyze" && <PortfolioAnalysisWorkspace />}
@@ -44,10 +50,14 @@ export function GuidedBuilder({ active = true }: { active?: boolean }) {
   const revision = useRef(0);
   const submitController = useRef<AbortController | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const hasMounted = useRef(false);
   const suggested = profiles.find((p) => Object.values(answers).includes(p));
   const complete = questions.every((q) => answers[q.id]);
 
-  useEffect(() => { heading.current?.focus(); }, [step]);
+  useEffect(() => {
+    if (!hasMounted.current) { hasMounted.current = true; return; }
+    heading.current?.focus({ preventScroll: true });
+  }, [step]);
   useEffect(() => () => { revision.current++; submitController.current?.abort(); }, []);
   useEffect(() => {
     if (!active || step !== 2 || !jobId || report || error) return;
@@ -112,7 +122,7 @@ export function GuidedBuilder({ active = true }: { active?: boolean }) {
   return <section className="analysis-workspace guided-builder" aria-labelledby="builder-title">
     <div className="workspace-intro"><p className="eyebrow">Guided portfolio construction</p><h2 id="builder-title">Build from your preferences</h2>
       <p>Explore an allocation across eligible S&P 500 stocks. No tickers or mathematical settings needed.</p></div>
-    <ol className="guided-steps" aria-label="Builder progress">{["Preferences", "Capital and review", "Recommendation"].map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined}>{index + 1}. {label}</li>)}</ol>
+    <ol className="guided-steps" aria-label="Builder progress">{["Preferences", "Capital and review", "Recommendation"].map((label, index) => <li key={label} className={index < step ? "complete" : undefined} aria-current={step === index ? "step" : undefined}><span aria-hidden="true">{index < step ? "✓" : index + 1}</span>{label}</li>)}</ol>
     <h3 ref={heading} tabIndex={-1}>{["Tell us your preferences", "Review your starting point", "Your recommendation"][step]}</h3>
     {step === 0 && <form noValidate className="portfolio-form" onSubmit={(e) => { e.preventDefault(); if (complete) { setValidation(""); setStep(1); } else { setValidation("Answer all three preference questions before continuing."); requestAnimationFrame(() => document.querySelector<HTMLElement>('.profile-controls[aria-invalid="true"] input')?.focus()); } }}>
       {questions.map((q) => <fieldset aria-invalid={Boolean(validation && !answers[q.id])} className="profile-controls" key={q.id}><legend>{q.title}</legend>{q.choices.map((choice, i) => <label className={answers[q.id] === profiles[i] ? "profile-option selected" : "profile-option"} key={choice}>
@@ -135,7 +145,7 @@ export function GuidedBuilder({ active = true }: { active?: boolean }) {
         <p>All profiles are stocks-only. Conservative does not mean capital protection. Capital scales illustrative USD amounts; costs, taxes and share purchases are excluded.</p></div>
       <div className="result-views"><button type="button" className="secondary-button" onClick={() => setStep(0)}>Back to preferences</button><button className="primary-button" type="submit" disabled={submitting}>Get recommendation</button></div>
     </form>}
-    {stale && report && <p role="status">Recommendations and simulations are stale. Use Get recommendation to recalculate with the chosen estimator. Displayed values retain their original model.</p>}
+    {stale && report && <p className="inline-notice warning" role="status">Recommendations and simulations are stale. Use Get recommendation to recalculate with the chosen estimator. Displayed values retain their original model.</p>}
     {error && <div role="alert" className="error-card"><span>{error}</span>{step === 2 && <button className="secondary-button" onClick={() => void submit()}>Retry calculation</button>}</div>}
     {step === 2 && <>
       <button className="secondary-button" onClick={() => { if (submitting) invalidate(); setStep(1); }}>Back to capital and review</button>
