@@ -1,90 +1,97 @@
-# Portfolio DSS — copione per presentazione e demo
+# Portfolio DSS — copione della presentazione e della demo
 
-Durata prevista: 15 minuti, più domande. Le slide 11 e 12 sono di supporto per il Q&A.
+Durata prevista:
 
-## Preparazione prima della presentazione
+- presentazione: circa 15 minuti;
+- demo guidata: circa 7 minuti e 40 secondi;
+- slide A1–A5: supporto matematico per le domande.
 
-1. Seguire i comandi in [`docs/DEMO.md`](../DEMO.md) e avviare API offline e web app.
-2. Verificare `http://127.0.0.1:8011/health` e la dicitura **API connected** nella pagina.
-3. Aprire in due schede separate i report HTML di Week 11 e Week 9 come fallback.
-4. Impostare lo zoom del browser al 100% e mantenere pronta la schermata iniziale del builder.
-5. Chiudere notifiche e applicazioni non necessarie.
+## Preparazione
 
-## Copione delle slide
+1. Avviare l’API offline e l’applicazione seguendo [`docs/DEMO.md`](../DEMO.md).
+2. Verificare `http://127.0.0.1:8011/health` e la dicitura **API connected**.
+3. Aprire la pagina iniziale del builder in una scheda dedicata.
+4. Aprire come fallback:
+   - `examples/case-studies/week11/report/report.html`;
+   - `examples/backtest/week9/report/report.html`.
+5. Impostare lo zoom del browser al 100% e chiudere notifiche e applicazioni non necessarie.
+6. Non eseguire una seconda ottimizzazione durante la demo. Il confronto tra stimatori sugli stessi pesi è già incluso nel risultato.
 
-### 0:00–0:35 — Slide 1, Portfolio DSS
+## Presentazione — 15 minuti
 
-«Portfolio DSS è un sistema di supporto alle decisioni per investitori non esperti. Il progetto aiuta
-a leggere un portafoglio, confrontare alternative e capire quali ipotesi sostengono ogni risultato.
-Non esegue operazioni e non promette rendimenti futuri.»
+### 0:00–0:25 — Slide 1, Teoria di portafoglio e supporto decisionale
 
-### 0:35–1:25 — Slide 2, Problema e confine di Phase B
+«Portfolio DSS nasce da un problema finanziario classico: allocare un capitale tra più attività quando rendimento e rischio sono incerti. Il progetto trasforma il modello media-varianza in un processo di supporto alla decisione. Non esegue investimenti e non promette risultati futuri.»
 
-«Il problema centrale è il compromesso tra rendimento atteso e rischio. Un singolo portafoglio
-“ottimo” nasconde preferenze e incertezza, quindi il sistema mostra più alternative comparabili.
-Phase B copre analisi, ottimizzazione, simulazione, spiegazioni e valutazione fuori campione. Restano
-esclusi costi di transazione, fiscalità, esecuzione automatica e suitability regolamentare.»
+### 0:25–1:15 — Slide 2, La decisione reale dell’investitore
 
-### 1:25–2:15 — Slide 3, Due percorsi utente
+«L’investitore dispone di capitale limitato e deve scegliere oggi sulla base di informazioni imperfette. Ogni peso assegnato a un titolo riduce il capitale disponibile per gli altri. I rendimenti futuri non sono noti e il rischio dipende anche dalle relazioni tra le attività. Inoltre, persone diverse accettano compromessi diversi. Per questo la domanda non è quale portafoglio sia migliore in assoluto, ma quale alternativa sia coerente con la decisione considerata.»
 
-«L’utente può inserire quantità già possedute oppure partire da capitale e preferenze. Entrambi i
-percorsi portano allo stesso tipo di confronto: portafoglio corrente o pesi uguali, tre profili sulla
-frontiera efficiente e benchmark SPY quando il confronto è significativo.»
+### 1:15–2:10 — Slide 3, Il ruolo di un Decision Support System
 
-Transizione: «Prima della demo, mostro come questi percorsi restano separati dalle fonti dati e dai
-modelli numerici.»
+«Un Decision Support System parte da dati osservati, applica un modello analitico e produce alternative confrontabili. Deve poi rendere l’evidenza comprensibile e lasciare la scelta finale alla persona. Portfolio DSS segue esattamente questo ciclo: prezzi e periodo costituiscono i dati, il modello quantifica rendimento e rischio, la frontiera genera alternative e le spiegazioni rendono visibili ipotesi e conseguenze. Il risultato supporta il giudizio umano, senza sostituirlo.»
 
-### 2:15–3:15 — Slide 4, Architettura modulare
+Transizione: «Per capire il modello centrale servono prima alcuni concetti finanziari.»
 
-«Il frontend Next.js comunica con una singola API FastAPI. I servizi applicativi orchestrano casi
-d’uso, mentre il dominio contiene contratti e calcoli finanziari. Wikipedia, Yahoo Finance, SQLite,
-SciPy e NumPy sono adapter sostituibili. Per la demo sostituisco soltanto gli adapter dati con fixture
-deterministiche; API, servizi e dominio restano invariati.»
+### 2:10–2:55 — Slide 4, Capitale, attività e pesi
 
-### 3:15–4:25 — Slide 5, Metodo e convenzioni
+«Il vettore x contiene i pesi del portafoglio. Ogni x con indice i rappresenta la quota di capitale assegnata all’attività i. Moltiplicando il peso per il capitale otteniamo un importo illustrativo. La somma dei pesi vale uno perché il portafoglio è interamente investito. Nella versione realizzata i pesi sono non negativi: il portafoglio è long-only e non usa vendite allo scoperto.»
 
-«Tutti i confronti usano prezzi adjusted close, rendimenti semplici giornalieri e 252 periodi per
-l’annualizzazione. Il rendimento atteso può provenire dalla media storica oppure da una media
-esponenziale con half-life di 63 osservazioni. Il rischio usa la covarianza campionaria. L’ottimizzatore
-risolve il problema media-varianza con vincoli long-only e somma dei pesi pari a uno.»
+### 2:55–3:50 — Slide 5, Dai prezzi ai rendimenti
 
-### 4:25–5:15 — Slide 6, Alternative e spiegazioni
+«Il calcolo parte dai prezzi adjusted close. Il rendimento semplice giornaliero è il rapporto tra il prezzo corrente e quello precedente, meno uno. Prima di confrontare titoli e benchmark, il sistema usa le stesse date e non inventa osservazioni mancanti. Le stime giornaliere vengono annualizzate con 252 periodi. Queste convenzioni non sono dettagli: se cambiano periodo, frequenza o trattamento dei dati, cambia anche il significato del confronto.»
 
-«I tre profili si collocano al 20%, 50% e 80% dell’intervallo di rendimento raggiungibile. Non sono
-percentuali di rischio né categorie universali. Le spiegazioni derivano da fatti tipizzati: variazioni
-di rendimento e volatilità, concentrazione, contributi al rischio e vincoli attivi.»
+### 3:50–4:50 — Slide 6, Rendimento atteso e rischio stimato
 
-### 5:15–6:15 — Slide 7, Incertezza e valutazione
+«Il rendimento atteso di ogni attività è inizialmente stimato con la media aritmetica dei rendimenti giornalieri, moltiplicata per 252. Il rischio usa la covarianza campionaria annualizzata sugli stessi rendimenti allineati. La diagonale descrive la variabilità delle singole attività; gli altri elementi descrivono come si muovono insieme. È importante distinguere questa media stimata dal CAGR, che descrive un percorso storico composto. Nessuna delle due grandezze garantisce il futuro.»
 
-«La simulazione Monte Carlo mostra distribuzioni, non previsioni certe. Il seed rende riproducibile
-la componente casuale a parità di input. Il backtest walk-forward evita il look-ahead: a ogni data di
-decisione usa solo informazioni precedenti e confronta i modelli sullo stesso periodo.»
+### 4:50–5:40 — Slide 7, Diversificazione e rischio di portafoglio
 
-### 6:15–7:25 — Slide 8, Risultati congelati
+«Il rendimento atteso del portafoglio è la media ponderata x trasposto per mu. La varianza è x trasposto Sigma x e la volatilità è la sua radice quadrata. Nella varianza compaiono sia i rischi individuali sia tutte le covarianze. Per questo non basta scegliere titoli con bassa volatilità separatamente: conta la combinazione. La diversificazione è una proprietà del portafoglio nel suo insieme.»
 
-«Nel campione 2019–2025 il portafoglio a pesi uguali raggiunge il valore terminale più alto. Il
-modello storico supera quello esponenziale nella finestra rolling, mentre accade il contrario nella
-finestra expanding. SPY mostra la volatilità annualizzata più bassa. Il risultato importante è la
-sensibilità al metodo e alla finestra, non la vittoria universale di una strategia.»
+### 5:40–6:55 — Slide 8, Il problema media-varianza
 
-### 7:25–8:10 — Slide 9, Riproducibilità
+«Questa è la formulazione centrale indicata dalla professoressa. Il modello massimizza il rendimento atteso del portafoglio e sottrae una penalizzazione proporzionale alla varianza. Mu contiene i rendimenti attesi, Sigma la matrice di covarianza, x i pesi e lambda l’avversione al rischio. Se lambda aumenta, il modello penalizza maggiormente la varianza. Se diminuisce, attribuisce più importanza al rendimento atteso. Il termine “ottimo” ha quindi senso soltanto dopo avere dichiarato preferenza, dati, stime e vincoli.»
 
-«Il progetto include snapshot, configurazioni, report HTML e JSON con hash del contenuto. La baseline
-finale supera 227 test backend e 42 test frontend, oltre a lint, type checking e build. La demo non
-richiede rete o preparazione manuale dei dati.»
+### 6:55–7:40 — Slide 9, Vincoli e insieme ammissibile
 
-Transizione: «Ora percorro il flusso che vedrebbe un utente non esperto.»
+«La somma dei pesi uguale a uno impone il budget. I pesi non negativi escludono le posizioni corte. Il limite superiore u controlla la concentrazione massima su un titolo. I vincoli definiscono l’insieme dei portafogli realmente considerati dal modello. Se un limite rende impossibile finanziare l’intero portafoglio, il sistema segnala l’infattibilità invece di produrre una soluzione apparente.»
 
-## Demo live, cinque minuti
+### 7:40–8:45 — Slide 10, Frontiera efficiente
 
-### 8:10–8:45 — Confine della demo
+«Per mostrare più alternative, il progetto usa anche una formulazione equivalente a rendimento obiettivo. Per ogni target tau minimizza la varianza mantenendo rendimento, budget e vincoli. Ripetendo il calcolo tra il portafoglio di minima varianza e il massimo rendimento raggiungibile si ottiene la frontiera efficiente. Il grafico usa un caso congelato del progetto. Ogni punto è Pareto-efficiente: per aumentare il rendimento stimato bisogna accettare più rischio, e non esiste un punto che domini tutti gli altri.»
+
+### 8:45–9:35 — Slide 11, Dalla preferenza alla frontiera
+
+«L’utente non deve scegliere direttamente lambda. I tre profili selezionano il 20, il 50 e l’80 per cento dell’intervallo di rendimento raggiungibile tra i due estremi. Conservative, moderate e aggressive descrivono quindi posizioni relative sulla stessa frontiera. Non sono probabilità di perdita, categorie universali o una valutazione regolamentare della persona.»
+
+### 9:35–10:35 — Slide 12, Incertezza e valutazione
+
+«L’ottimizzazione usa parametri stimati, quindi il DSS aggiunge due tipi di evidenza. Monte Carlo traduce rendimento e volatilità in distribuzioni condizionate a quelle stime; le bande non includono l’incertezza dei parametri. Il walk-forward ricalcola invece ogni decisione usando solo le informazioni disponibili prima della data di esecuzione. Il risultato congelato mostra il punto essenziale: con finestra rolling la media storica termina sopra l’esponenziale, mentre con finestra expanding accade il contrario. Il ranking si inverte, quindi nessuno stimatore vince universalmente.»
+
+Transizione: «A questo punto il modello matematico è completo. Posso mostrare le scelte con cui l’ho trasformato in un DSS utilizzabile.»
+
+### 10:35–11:35 — Slide 13, Dal modello al processo decisionale
+
+«Il processo implementato mantiene una catena esplicita. Prima costruisce un campione coerente, poi stima mu e Sigma, genera la frontiera e confronta le alternative con baseline comuni. Dai risultati numerici ricava spiegazioni verificabili e infine restituisce la scelta all’utente. Il contributo non coincide con un singolo algoritmo: consiste nel mantenere coerenti dati, modelli, alternative ed evidenza durante tutto il percorso.»
+
+### 11:35–13:00 — Slide 14, Scelte che rendono affidabile il DSS
+
+«Tutte le alternative condividono la stessa finestra, gli stessi rendimenti e le stesse convenzioni. La sorgente di rendimento atteso può cambiare senza modificare il problema di ottimizzazione. Dopo la soluzione numerica, il sistema ricalcola le metriche e verifica in modo indipendente budget, pesi e limite di concentrazione. I dati mancanti non vengono riempiti silenziosamente. Le spiegazioni rimandano a fatti numerici identificabili. Seed e hash permettono di ripetere simulazioni e report. Se una soluzione non supera i controlli, il sistema mostra un errore e non una raccomandazione.»
+
+### 13:00–15:00 — Slide 15, Perché è un buon sistema di supporto
+
+«Possiamo ora confrontare il risultato con il ciclo iniziale. Il sistema informa mostrando periodo, dati e convenzioni. Confronta profili, pesi uguali e benchmark. Separa osservazioni storiche, parametri stimati, simulazioni ed evidenza fuori campione. Spiega risultati, vincoli e limiti. Soprattutto, non esegue ordini e non presenta una previsione come certezza. Queste proprietà rendono Portfolio DSS un sistema di supporto alla decisione, non un generatore automatico di portafogli. Nella demo seguirò lo stesso ciclo: preferenza, alternative, spiegazioni, incertezza e scelta.»
+
+## Demo guidata — circa 7 minuti e 40 secondi
+
+### 0:00–0:35 — Confine e provenienza
 
 Mostrare la schermata iniziale e **API connected**.
 
-«Questa sessione usa dati sintetici deterministici, dichiarati nell’interfaccia. I numeri storici
-mostrati prima provengono invece dallo snapshot congelato.»
+«La demo usa prezzi sintetici deterministici, dichiarati nell’interfaccia, così il percorso rimane riproducibile e non dipende dalla rete. I risultati storici citati nella presentazione provengono invece dai report congelati. Anche qui il sistema supporta una decisione educativa e non esegue operazioni.»
 
-### 8:45–9:30 — Preferenze e capitale
+### 0:35–1:25 — Preferenza e capitale
 
 Selezionare:
 
@@ -92,99 +99,129 @@ Selezionare:
 - **Somewhat comfortable**;
 - **Reassess before changing exposure**.
 
-Premere **Continue to capital**, inserire `10000`, lasciare **Historical mean** e avviare il calcolo.
+Premere **Continue to capital**, inserire `10000` e mantenere **Historical mean**.
 
-«La regola è deterministica: la risposta meno aggressiva determina il profilo suggerito. Il capitale
-scala i pesi in importi USD illustrativi, senza generare ordini o quote intere.»
+«Le tre risposte esprimono una preferenza. La regola usa la risposta meno aggressiva e suggerisce quindi il profilo moderate. Inserisco diecimila dollari: il capitale serve soltanto a tradurre i pesi in importi illustrativi. Mantengo la media storica come sorgente del rendimento atteso.»
 
-### 9:30–10:45 — Alternative
+Premere **Get recommendation**.
 
-Mostrare il profilo moderato, quindi selezionare conservative e aggressive.
+### 1:25–2:20 — Campione e ipotesi comuni
 
-«Cambiano insieme allocazione, rendimento atteso e volatilità stimata. Il passaggio tra profili non
-scarica nuovi prezzi: confrontiamo punti della stessa frontiera e dello stesso campione.»
+Mostrare **Your starting point**, profilo suggerito, copertura, finestra e massimo 10%.
 
-Aprire le ragioni della raccomandazione.
+«Prima del risultato vediamo il contesto della decisione. Tutte le alternative condividono lo stesso periodo e le stesse osservazioni. Il sistema dichiara quanti titoli risultano eleggibili, quali vincoli applica e quali semplificazioni restano fuori dal modello. Anche conservative rimane un portafoglio azionario e non implica protezione del capitale.»
 
-«Ogni frase rimanda a fatti numerici visibili. Il sistema evita spiegazioni opache o generate senza
-traccia degli input.»
+### 2:20–3:35 — Alternative sulla stessa frontiera
 
-### 10:45–11:35 — Evidenza avanzata
+Mostrare moderate, poi selezionare conservative e aggressive. Indicare posizione sulla frontiera, rendimento annuo stimato, volatilità e allocazione.
 
-Aprire i dettagli avanzati e indicare convenzioni, modelli, vincolo massimo, provenienza e report hash.
+«Questi tre pulsanti non richiamano nuovi prezzi. Selezionano punti diversi della stessa frontiera costruita con lo stesso campione. Muovendoci verso aggressive cambiano insieme rendimento obiettivo, volatilità e pesi. Il DSS rende visibile il costo della preferenza invece di presentare una sola soluzione come inevitabile.»
 
-«Qui separiamo parametri stimati, ipotesi e diagnostica. Questa parte resta disponibile senza
-bloccare il percorso semplice.»
+Tornare su **Moderate**.
 
-### 11:35–12:40 — Simulazione
+### 3:35–4:35 — Spiegazioni verificabili
 
-Aprire **Explore uncertainty**. Selezionare tre anni, 10.000 percorsi e seed `42`, quindi eseguire.
+Aprire **Why this portfolio?** e indicare le ragioni principali e i fatti collegati.
 
-«La distribuzione confronta lo stesso capitale iniziale. La probabilità di perdita significa valore
-finale inferiore al capitale nominale, non drawdown temporaneo. I parametri restano costanti e le
-bande non includono l’incertezza di stima.»
+«La spiegazione parte dal confronto con i pesi uguali, che rappresentano la baseline del percorso guidato. Ogni frase usa differenze numeriche di rendimento, volatilità, allocazione, concentrazione o contributo al rischio. Un titolo che raggiunge il limite massimo viene indicato come vincolo attivo. Il testo contestualizza una soluzione congiunta: non sostiene che un singolo indicatore abbia causato da solo un determinato peso.»
 
-### 12:40–13:10 — Chiusura della demo
+### 4:35–5:25 — Sensibilità allo stimatore
 
-«La demo mostra la funzione del DSS: rendere visibili alternative, ipotesi e incertezza prima che
-l’utente prenda una decisione.»
+Mostrare **Historical vs forecast expected returns** senza cambiare lo stimatore selezionato.
 
-## Chiusura
+«Qui gli stessi pesi vengono valutati con due stime del rendimento atteso: media storica uniforme e media esponenziale, che attribuisce più peso alle osservazioni recenti. Le differenze dipendono dal modello di rendimento, non da una seconda allocazione. Questo confronto mostra sensibilità metodologica senza dichiarare che uno stimatore sia universalmente superiore.»
 
-### 13:10–14:15 — Slide 10, Limiti e sviluppi futuri
+### 5:25–7:10 — Esplorazione dell’incertezza
 
-«I limiti principali riguardano membership storica, costi e turnover, stabilità dei parametri e
-operatività single-process. Il lavoro futuro segue questi limiti: dati point-in-time, vincoli più
-realistici, modelli robusti e segnali multipli. Queste estensioni restano fuori da Phase B.»
+Aprire **Explore possible outcomes**. Impostare:
 
-### 14:15–15:00 — Conclusione e domande
+- orizzonte: **3 years**;
+- confronto: **Equal weight**;
+- percorsi: **10,000**;
+- seed: `42`.
 
-«Portfolio DSS realizza il problema media-varianza richiesto e lo trasforma in un percorso
-comprensibile, verificabile e riproducibile. Il contributo principale è il collegamento tra modello,
-alternative, evidenza e spiegazione. Sono disponibile per le domande.»
+Eseguire la simulazione e mostrare mediana, P5, bande e probabilità di perdita.
+
+«Ogni alternativa parte dagli stessi diecimila dollari. La linea mostra la mediana; le bande interne e esterne mostrano percentili della distribuzione simulata. Il P5 rappresenta un esito di coda del modello. La probabilità di perdita significa terminare sotto il capitale nominale iniziale dopo tre anni, non subire una perdita temporanea durante il percorso. I parametri e i pesi restano costanti e le bande non includono l’errore con cui mu e Sigma sono stati stimati.»
+
+### 7:10–7:40 — Chiusura
+
+Tornare al confronto dei profili.
+
+«La demo ha seguito il ciclo del DSS: ha raccolto una preferenza, costruito alternative comparabili, spiegato le differenze ed esposto l’incertezza. Il sistema organizza l’evidenza; la decisione rimane all’utente.»
+
+## Estensione facoltativa fino a dieci minuti
+
+Se rimangono circa due minuti, aprire i dettagli avanzati e mostrare soltanto:
+
+1. convenzioni finanziarie e intervallo effettivo;
+2. limite massimo e diagnostica dei punti della frontiera;
+3. provenienza dei dati, seed, report hash e result hash.
+
+Dire:
+
+«Questi dettagli permettono di ricostruire il significato del risultato e di ripetere lo stesso esperimento. Non modifico lo stimatore e non avvio una nuova ottimizzazione durante la demo, perché il confronto già mostrato è sufficiente a discutere la sensibilità del modello.»
 
 ## Fallback immediato
 
-Se la UI non risponde entro 15 secondi:
+Se l’interfaccia non risponde entro 15 secondi:
 
 1. Aprire `examples/case-studies/week11/report/report.html`.
-2. Mostrare il caso guided profiles, la simulazione e le limitazioni.
-3. Aprire `examples/backtest/week9/report/report.html` per il confronto walk-forward.
-4. Dichiarare che i report sono statici, autonomi e generati dallo stesso dominio applicativo.
+2. Usare il caso **Risk-profile choices across five sectors** per mostrare stessa finestra e stessi vincoli, quindi confrontare conservative, moderate e aggressive.
+3. Mostrare la simulazione congelata del profilo moderate e le relative limitazioni.
+4. Aprire `examples/backtest/week9/report/report.html` e confrontare media storica, media esponenziale, pesi uguali e SPY proxy.
+5. Concludere che i report sono autonomi, riproducibili e generati dagli stessi contratti matematici usati dal percorso interattivo.
+
+## Uso delle appendici
+
+- **A1 — Stima del rendimento atteso:** normalizzazione dei pesi esponenziali e half-life di 63 osservazioni.
+- **A2 — Covarianza, correlazione e concentrazione:** differenza tra covarianza e correlazione, HHI ed effective count.
+- **A3 — Contributi al rischio:** attribuzione di Eulero e contributi negativi come effetto di diversificazione.
+- **A4 — Monte Carlo:** drift, volatilità, passo mensile, percentili e ipotesi di parametri costanti.
+- **A5 — Backtest walk-forward:** risultati completi e formule delle metriche realizzate.
 
 ## Domande previste
 
-### Perché usare SPY e non l’indice ufficiale?
+### Perché questo progetto è un DSS e non soltanto un ottimizzatore?
 
-SPY fornisce una serie adjusted-close accessibile e coerente con il trattamento total-return degli
-altri strumenti. Il sistema lo etichetta sempre come proxy ETF, non come indice ufficiale.
+Perché il processo comprende dati espliciti, alternative, baseline, preferenze, spiegazioni, incertezza e valutazione. L’ottimizzatore è un componente del modello; il DSS organizza l’intero processo e mantiene la decisione sotto il controllo dell’utente.
 
-### Il profilo moderato rappresenta una suitability finanziaria?
+### Perché non viene mostrato un solo portafoglio ottimo?
 
-No. La mappatura traduce preferenze illustrative in una posizione relativa sulla frontiera. Non
-considera reddito, patrimonio, obiettivi legali o altri requisiti di una valutazione regolamentare.
+La soluzione dipende dalla preferenza per il rischio e da parametri stimati. La frontiera rende visibili più compromessi Pareto-efficienti e permette all’utente di confrontarli con convenzioni comuni.
+
+### Il profilo moderate rappresenta una suitability finanziaria?
+
+No. La mappatura traduce tre preferenze illustrative in una posizione relativa sulla frontiera. Non considera reddito, patrimonio, obiettivi legali o altri requisiti di una valutazione regolamentare.
+
+### Perché usare la varianza come misura di rischio?
+
+È la misura richiesta dalla formulazione media-varianza e consente di rappresentare la diversificazione tramite la covarianza. Rimane una semplificazione: penalizza nello stesso modo oscillazioni positive e negative e non descrive tutti i rischi rilevanti.
+
+### Perché rendimento atteso e covarianza devono usare lo stesso campione?
+
+Il confronto richiede unità, frequenza e periodo compatibili. Mescolare finestre o convenzioni diverse renderebbe incoerenti sia il valore dell’obiettivo sia la posizione dei portafogli sulla frontiera.
+
+### Perché usare SPY invece dell’indice ufficiale?
+
+SPY fornisce una serie adjusted-close coerente con il trattamento total-return degli altri strumenti. Il progetto lo etichetta come proxy ETF e non come indice ufficiale.
 
 ### Perché il forecast è una media esponenziale semplice?
 
-Permette di verificare la sostituibilità del contratto, mantenere il modello spiegabile e costruire
-un confronto fuori campione contro una baseline semplice. Non viene presentato come previsore certo.
+Serve a verificare la sostituibilità del segnale di rendimento atteso e a studiare la sensibilità delle decisioni con un modello comprensibile e deterministico. Non viene presentato come previsore certo.
 
 ### Come viene evitato il look-ahead nel backtest?
 
-Ogni decisione usa una finestra che termina prima della data di esecuzione. Tutte le strategie
-condividono le stesse sessioni di valutazione e il codice contiene test espliciti sul timing.
+Ogni stima termina prima della data di esecuzione. Dopo l’allocazione, il portafoglio guadagna soltanto i rendimenti osservati successivamente. Tutte le strategie condividono le stesse sessioni di valutazione.
 
-### Perché il portafoglio a pesi uguali ottiene il risultato migliore nel campione?
+### Perché i pesi uguali ottengono il risultato migliore nel campione?
 
-È un risultato del paniere, del periodo e delle ipotesi scelti. Conferma l’utilità di una baseline e
-mostra che maggiore complessità non implica superiorità. Non giustifica una previsione futura.
+È un risultato del paniere, del periodo e delle ipotesi scelti. Mostra l’utilità di una baseline semplice e conferma che maggiore complessità non implica superiorità. Non giustifica una previsione futura.
 
-### Cosa rende riproducibile la demo?
+### Cosa rende riproducibili demo e report?
 
-Gli adapter sintetici usano dati e seed deterministici. I report storici usano snapshot e
-configurazioni versionate, includono hash del contenuto e non richiedono servizi esterni.
+La demo usa dati sintetici deterministici. Simulazioni e report registrano configurazione, convenzioni, versioni del modello, seed, provenienza e hash del contenuto. La riproducibilità richiede gli stessi input e lo stesso ambiente numerico.
 
-### Perché non sono inclusi costi di transazione e tasse?
+### Perché non sono inclusi costi, tasse e turnover?
 
-Phase B valuta il nucleo del DSS. Costi e turnover cambierebbero l’ottimizzazione e le spiegazioni;
-sono il primo sviluppo futuro proposto, non un dettaglio da aggiungere solo alla presentazione.
+Phase B verifica il nucleo del DSS e la formulazione richiesta. Costi e turnover modificherebbero insieme ottimizzazione, valutazione ed explanation layer; costituiscono un’estensione del modello, non una semplice voce da sottrarre alla fine.
